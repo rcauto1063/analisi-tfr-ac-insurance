@@ -5,6 +5,7 @@ const valoreLabel = document.getElementById("valore-label");
 const mensilitaField = document.getElementById("mensilita-field");
 const resultsPanel = document.getElementById("results-panel");
 const inputPanel = document.getElementById("input-panel");
+const pdfButton = document.getElementById("print-button");
 
 const labels = {
   ral: "RAL media annua (€)",
@@ -208,14 +209,236 @@ document.getElementById("new-analysis").addEventListener("click", () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
-/* CREA PDF GRAFICO TRAMITE LA STAMPA DEL DISPOSITIVO */
-document.getElementById("print-button").addEventListener("click", () => {
+/* CREA IL PDF GRAFICO */
+pdfButton.addEventListener("click", async () => {
   if (resultsPanel.hidden) {
     alert("Prima completa l'analisi per visualizzare il report.");
     return;
   }
 
-  window.print();
+  if (typeof window.html2pdf !== "function") {
+    alert(
+      "Il generatore PDF non è disponibile. Verifica la connessione e ricarica l'app."
+    );
+    return;
+  }
+
+  const vecchioTesto = pdfButton.textContent;
+  pdfButton.disabled = true;
+  pdfButton.textContent = "Creazione PDF in corso...";
+
+  let finestraPDF = null;
+  let urlPDF = null;
+  let contenitore = null;
+
+  try {
+    /*
+      Apriamo subito una scheda vuota:
+      su iPhone Safari può bloccare l'apertura
+      di nuove schede avviata dopo un'attesa.
+    */
+    finestraPDF = window.open("about:blank", "_blank");
+
+    contenitore = document.createElement("div");
+    contenitore.className = "pdf-export";
+    contenitore.style.cssText = [
+      "position:fixed",
+      "left:0",
+      "top:0",
+      "width:794px",
+      "padding:24px",
+      "background:#ffffff",
+      "color:#222222",
+      "z-index:2147483000",
+      "box-sizing:border-box",
+      "pointer-events:none"
+    ].join(";");
+
+    const intestazione = document.querySelector(".app-header");
+    const recapiti = document.querySelector(".contact-bar");
+    const risultato = resultsPanel.cloneNode(true);
+    const footer = document.querySelector("footer");
+
+    if (intestazione) {
+      contenitore.appendChild(intestazione.cloneNode(true));
+    }
+
+    if (recapiti) {
+      contenitore.appendChild(recapiti.cloneNode(true));
+    }
+
+    /* Rimuove i pulsanti dal documento PDF */
+    risultato.querySelectorAll("button, .actions").forEach(el => {
+      el.remove();
+    });
+
+    risultato.hidden = false;
+    risultato.style.display = "block";
+    risultato.style.margin = "18px 0 0";
+    risultato.style.width = "100%";
+    risultato.style.boxSizing = "border-box";
+
+    contenitore.appendChild(risultato);
+
+    if (footer) {
+      const footerPDF = footer.cloneNode(true);
+      footerPDF.style.marginTop = "18px";
+      contenitore.appendChild(footerPDF);
+    }
+
+    document.body.appendChild(contenitore);
+
+    /* Attende il caricamento delle immagini, incluso il logo */
+    const immagini = Array.from(contenitore.querySelectorAll("img"));
+
+    await Promise.all(
+      immagini.map(img => {
+        if (img.complete) {
+          return Promise.resolve();
+        }
+
+        return new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+      })
+    );
+
+    const opzioni = {
+      margin: [8, 8, 8, 8],
+      filename: "Analisi_TFR_AC_Insurance.pdf",
+      image: {
+        type: "jpeg",
+        quality: 0.98
+      },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 850
+      },
+      jsPDF: {
+        unit: "mm",
+        format: "a4",
+        orientation: "portrait",
+        compress: true
+      },
+      pagebreak: {
+        mode: ["css", "legacy"],
+        avoid: [".summary-card", "tr", ".disclaimer"]
+      }
+    };
+
+    /* Genera un vero file PDF dalla pagina grafica */
+    const blob = await window.html2pdf()
+      .set(opzioni)
+      .from(contenitore)
+      .outputPdf("blob");
+
+    if (!blob || blob.size === 0) {
+      throw new Error("Il PDF generato è vuoto.");
+    }
+
+    urlPDF = URL.createObjectURL(blob);
+
+    const nomeAzienda =
+      document.getElementById("azienda").value.trim() || "Azienda";
+
+    const nomeFile =
+      "Analisi_TFR_" +
+      nomeAzienda
+        .replace(/[^a-z0-9_-]/gi, "_")
+        .slice(0, 50) +
+      ".pdf";
+
+    const filePDF = new File(
+      [blob],
+      nomeFile,
+      { type: "application/pdf" }
+    );
+
+    /*
+      Se il dispositivo supporta la condivisione dei file,
+      propone direttamente il PDF.
+    */
+    if (
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare({ files: [filePDF] })
+    ) {
+      if (finestraPDF && !finestraPDF.closed) {
+        finestraPDF.close();
+        finestraPDF = null;
+      }
+
+      try {
+        await navigator.share({
+          files: [filePDF],
+          title: "Analisi personalizzata TFR",
+          text: "Analisi TFR elaborata da AC Insurance."
+        });
+
+        return;
+      } catch (erroreCondivisione) {
+        if (erroreCondivisione.name === "AbortError") {
+          return;
+        }
+
+        /*
+          Se la condivisione diretta non è disponibile,
+          passa all'apertura del PDF.
+        */
+      }
+    }
+
+    /*
+      Alternativa: apre il PDF vero nel browser.
+      Da lì l'utente può utilizzare la condivisione
+      del dispositivo.
+    */
+    if (finestraPDF && !finestraPDF.closed) {
+      finestraPDF.location.href = urlPDF;
+      finestraPDF = null;
+    } else {
+      const link = document.createElement("a");
+      link.href = urlPDF;
+      link.download = nomeFile;
+      link.target = "_blank";
+      link.rel = "noopener";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+  } catch (errore) {
+    if (finestraPDF && !finestraPDF.closed) {
+      finestraPDF.close();
+    }
+
+    console.error("Errore nella creazione PDF:", errore);
+
+    alert(
+      "Non è stato possibile creare il PDF. Ricarica l'app e riprova. " +
+      "Se il problema continua, verificheremo la compatibilità del dispositivo."
+    );
+  } finally {
+    if (contenitore) {
+      contenitore.remove();
+    }
+
+    pdfButton.disabled = false;
+    pdfButton.textContent = vecchioTesto;
+
+    /*
+      Mantiene temporaneamente disponibile il PDF
+      per la scheda appena aperta.
+    */
+    if (urlPDF) {
+      setTimeout(() => URL.revokeObjectURL(urlPDF), 60000);
+    }
+  }
 });
 
 /* FUNZIONAMENTO OFFLINE */
