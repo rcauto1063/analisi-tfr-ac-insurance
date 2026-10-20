@@ -1,4 +1,3 @@
-
 const form = document.getElementById("analysis-form");
 const tipoValore = document.getElementById("tipoValore");
 const valoreLabel = document.getElementById("valore-label");
@@ -238,43 +237,27 @@ document.getElementById("print-button").addEventListener("click", async event =>
       "<p>Preparazione del PDF in corso...</p></body></html>"
     );
     pdfWindow.document.close();
-  } catch (error) {
-    /* Proseguiamo con la generazione. */
-  }
+  } catch (error) {}
 
   button.disabled = true;
   const testoOriginale = button.textContent;
   button.textContent = "Creazione PDF in corso...";
 
-  let overlay = null;
   let report = null;
   let objectUrl = null;
 
   try {
-    /*
-      Creiamo una pagina di lavoro visibile.
-      Non posizioniamo il contenuto fuori dallo schermo:
-      questo è il cambiamento principale rispetto alla versione precedente.
-    */
-    overlay = document.createElement("div");
-
-    overlay.style.cssText =
-      "position:fixed;inset:0;z-index:2147483647;" +
-      "overflow:auto;background:#ffffff;color:#1e293b;" +
-      "font-family:Arial,sans-serif;";
-
-    const status = document.createElement("div");
-    status.textContent = "Preparazione del PDF in corso…";
-    status.style.cssText =
-      "padding:10px 16px;background:#17365d;color:#ffffff;" +
-      "font-size:14px;text-align:center;";
-
     report = document.createElement("div");
+
+    /*
+      Dimensioni A4 in millimetri.
+      Il contenitore resta nel DOM durante la generazione.
+    */
     report.style.cssText =
-      "width:794px;max-width:none;padding:20px;margin:0 auto;" +
-      "background:#ffffff;color:#1e293b;" +
-      "font-family:Arial,sans-serif;font-size:12px;" +
-      "box-sizing:border-box;";
+      "position:fixed;top:0;left:0;width:186mm;" +
+      "padding:8mm;margin:0;background:#ffffff;color:#1e293b;" +
+      "font-family:Arial,sans-serif;font-size:11px;" +
+      "box-sizing:border-box;z-index:2147483647;";
 
     const header = document.querySelector(".app-header").cloneNode(true);
     const contacts = document.querySelector(".contact-bar").cloneNode(true);
@@ -287,27 +270,27 @@ document.getElementById("print-button").addEventListener("click", async event =>
       .forEach(el => el.remove());
 
     header.style.cssText =
-      "display:block;padding:20px;background:#ffffff;color:#17365d;" +
+      "display:block;padding:12px;background:#ffffff;color:#17365d;" +
       "border-bottom:1px solid #dbe3ec;text-align:center;";
 
     const logo = header.querySelector("img");
 
     if (logo) {
       logo.style.cssText =
-        "display:block;width:120px;height:auto;max-height:75px;" +
-        "object-fit:contain;margin:0 auto 12px;";
+        "display:block;width:100px;height:auto;max-height:65px;" +
+        "object-fit:contain;margin:0 auto 8px;";
     }
 
     const title = header.querySelector("h1");
 
     if (title) {
       title.style.cssText =
-        "font-size:22px;line-height:1.3;color:#17365d;margin:0;";
+        "font-size:19px;line-height:1.3;color:#17365d;margin:0;";
     }
 
     contacts.style.cssText =
-      "display:block;padding:12px;background:#e8eef5;" +
-      "color:#17365d;font-size:11px;line-height:1.8;";
+      "display:block;padding:8px;background:#e8eef5;" +
+      "color:#17365d;font-size:10px;line-height:1.6;";
 
     contacts.querySelectorAll("span").forEach(el => {
       el.style.display = "block";
@@ -319,45 +302,49 @@ document.getElementById("print-button").addEventListener("click", async event =>
     });
 
     results.style.cssText =
-      "display:block;width:100%;margin:0;padding:16px;" +
+      "display:block;width:100%;margin:0;padding:10px;" +
       "border:0;border-radius:0;box-shadow:none;" +
       "background:#ffffff;box-sizing:border-box;";
 
     results.querySelectorAll(".summary-grid").forEach(el => {
-      el.style.cssText = "display:block;margin-bottom:18px;";
+      el.style.cssText =
+        "display:grid;grid-template-columns:repeat(2,minmax(0,1fr));" +
+        "gap:8px;margin-bottom:14px;width:100%;";
     });
 
     results.querySelectorAll(".summary-card").forEach(el => {
       el.style.cssText =
-        "display:inline-block;vertical-align:top;width:46%;" +
-        "margin:1%;padding:12px;border:1px solid #dbe3ec;" +
-        "border-radius:6px;box-sizing:border-box;";
+        "display:block;width:auto;min-width:0;margin:0;padding:9px;" +
+        "border:1px solid #dbe3ec;border-radius:5px;" +
+        "box-sizing:border-box;overflow-wrap:anywhere;";
     });
 
     results.querySelectorAll("h2").forEach(el => {
       el.style.cssText =
-        "font-size:20px;color:#17365d;margin:0 0 10px;";
+        "font-size:17px;line-height:1.3;color:#17365d;margin:0 0 9px;";
     });
 
     results.querySelectorAll("h3").forEach(el => {
       el.style.cssText =
-        "font-size:15px;color:#17365d;margin:16px 0 8px;";
+        "font-size:13px;line-height:1.3;color:#17365d;margin:12px 0 7px;";
     });
 
     results.querySelectorAll(".table-wrap").forEach(el => {
-      el.style.cssText = "width:100%;overflow:visible;";
+      el.style.cssText =
+        "display:block;width:100%;max-width:100%;overflow:visible;";
     });
 
     results.querySelectorAll("table").forEach(el => {
       el.style.cssText =
-        "width:100%;border-collapse:collapse;font-size:11px;" +
-        "table-layout:auto;";
+        "display:table;width:100%;max-width:100%;" +
+        "border-collapse:collapse;table-layout:fixed;font-size:10px;";
     });
 
     results.querySelectorAll("th,td").forEach(el => {
       el.style.cssText =
-        "padding:7px 6px;border-bottom:1px solid #dbe3ec;" +
-        "vertical-align:top;text-align:left;overflow-wrap:anywhere;";
+        "padding:5px 4px;border-bottom:1px solid #dbe3ec;" +
+        "vertical-align:top;text-align:left;white-space:normal;" +
+        "overflow-wrap:anywhere;word-break:normal;";
     });
 
     results.querySelectorAll("td").forEach(el => {
@@ -366,39 +353,40 @@ document.getElementById("print-button").addEventListener("click", async event =>
 
     results.querySelectorAll(".disclaimer").forEach(el => {
       el.style.cssText =
-        "margin-top:14px;padding:12px;background:#f1f3f5;" +
-        "border:1px solid #d1d5db;font-size:10px;line-height:1.5;";
+        "display:block;margin-top:12px;padding:9px;" +
+        "background:#f1f3f5;border:1px solid #d1d5db;" +
+        "font-size:9px;line-height:1.45;white-space:normal;";
     });
 
     const footer = document.createElement("p");
     footer.textContent =
       "AC Insurance · Analisi personalizzata TFR azienda";
     footer.style.cssText =
-      "padding:12px;text-align:center;color:#64748b;font-size:10px;";
+      "padding:8px 0 0;text-align:center;color:#64748b;font-size:9px;";
 
     report.appendChild(header);
     report.appendChild(contacts);
     report.appendChild(results);
     report.appendChild(footer);
 
-    overlay.appendChild(status);
-    overlay.appendChild(report);
-    document.body.appendChild(overlay);
+    document.body.appendChild(report);
 
-    /*
-      Lasciamo al browser il tempo di disegnare il contenuto
-      prima di avviare html2canvas.
-    */
-    await new Promise(resolve => requestAnimationFrame(() => {
-      requestAnimationFrame(resolve);
-    }));
+    await new Promise(resolve => {
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
+
+    const altezzaReport = Math.ceil(report.scrollHeight);
+
+    if (altezzaReport < 200) {
+      throw new Error("Il contenuto del riepilogo non è stato caricato correttamente.");
+    }
 
     const options = {
-      margin: 7,
+      margin: [8, 8, 8, 8],
       filename: "Analisi_TFR_AC_Insurance.pdf",
       image: {
         type: "jpeg",
-        quality: 0.92
+        quality: 0.95
       },
       html2canvas: {
         scale: 1.5,
@@ -409,7 +397,7 @@ document.getElementById("print-button").addEventListener("click", async event =>
         scrollX: 0,
         scrollY: 0,
         windowWidth: 794,
-        width: 794
+        windowHeight: altezzaReport
       },
       jsPDF: {
         unit: "mm",
@@ -442,7 +430,6 @@ document.getElementById("print-button").addEventListener("click", async event =>
     objectUrl = URL.createObjectURL(blob);
     pdfWindow.location.href = objectUrl;
 
-    /* Non revocare l'URL subito: Safari potrebbe averne ancora bisogno. */
   } catch (error) {
     console.error("Errore PDF:", error);
 
@@ -455,8 +442,8 @@ document.getElementById("print-button").addEventListener("click", async event =>
       (error && error.message ? error.message : "riprova.")
     );
   } finally {
-    if (overlay && overlay.parentNode) {
-      overlay.parentNode.removeChild(overlay);
+    if (report && report.parentNode) {
+      report.parentNode.removeChild(report);
     }
 
     button.disabled = false;
