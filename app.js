@@ -28,7 +28,7 @@ const percent = n =>
 const num = id =>
   Number(document.getElementById(id).value);
 
-/* AGGIORNAMENTO DEL CAMPO DI INSERIMENTO */
+/* AGGIORNAMENTO DEL CAMPO */
 tipoValore.addEventListener("change", () => {
   valoreLabel.textContent = labels[tipoValore.value];
   mensilitaField.hidden = tipoValore.value !== "mensile";
@@ -83,7 +83,9 @@ form.addEventListener("submit", event => {
   const impostaRivalutazione = num("imposta") / 100;
   const oneriImpropri = num("oneri") / 100;
 
-  let ral, monte, tfr;
+  let ral;
+  let monte;
+  let tfr;
 
   if (tipoValore.value === "ral") {
     ral = valore;
@@ -103,11 +105,10 @@ form.addEventListener("submit", event => {
     tfr = monte * coeffTFR;
   }
 
-  const rivalutazione = 0.015 + (inflazione * 75 / 100);
+  const rivalutazione = 0.015 + inflazione * 75 / 100;
 
-  const deduzioneTFR = dipendenti < 50
-    ? deduzione50
-    : deduzioneOltre;
+  const deduzioneTFR =
+    dipendenti < 50 ? deduzione50 : deduzioneOltre;
 
   const deduzione = tfr * deduzioneTFR;
   const costiAzienda = dipendenti <= 60;
@@ -135,10 +136,7 @@ form.addEventListener("submit", event => {
     costoOneri;
 
   const delta = costoTotale + deduzione;
-
-  const deltaPercentuale = tfr > 0
-    ? (delta / tfr) * 100
-    : 0;
+  const deltaPercentuale = tfr > 0 ? delta / tfr * 100 : 0;
 
   document.getElementById("result-company").textContent = azienda;
   document.getElementById("out-tfr").textContent = euro(tfr);
@@ -146,7 +144,6 @@ form.addEventListener("submit", event => {
     euro(costoTotale);
   document.getElementById("out-deduzione").textContent = euro(deduzione);
   document.getElementById("out-delta").textContent = euro(delta);
-
   document.getElementById("out-percentuale").textContent =
     percent(deltaPercentuale) + " del TFR annuo";
 
@@ -211,7 +208,7 @@ document.getElementById("new-analysis").addEventListener("click", () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
-/* STAMPA DEL REPORT GRAFICO E SALVATAGGIO IN PDF */
+/* CREA PDF GRAFICO TRAMITE LA STAMPA DEL DISPOSITIVO */
 document.getElementById("print-button").addEventListener("click", () => {
   if (resultsPanel.hidden) {
     alert("Prima completa l'analisi per visualizzare il report.");
