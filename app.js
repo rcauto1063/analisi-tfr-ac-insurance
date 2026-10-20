@@ -1,3 +1,4 @@
+
 const form = document.getElementById("analysis-form");
 const tipoValore = document.getElementById("tipoValore");
 const valoreLabel = document.getElementById("valore-label");
@@ -12,23 +13,19 @@ const labels = {
   mensile: "Stipendio mensile (€)"
 };
 
-function euro(n) {
-  return new Intl.NumberFormat("it-IT", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(n) + " €";
-}
+const euro = n =>
+  new Intl.NumberFormat("it-IT", {
+    style: "currency",
+    currency: "EUR"
+  }).format(n);
 
-function percent(n) {
-  return new Intl.NumberFormat("it-IT", {
+const percent = n =>
+  new Intl.NumberFormat("it-IT", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(n) + "%";
-}
 
-function num(id) {
-  return Number(document.getElementById(id).value);
-}
+const num = id => Number(document.getElementById(id).value);
 
 tipoValore.addEventListener("change", () => {
   valoreLabel.textContent = labels[tipoValore.value];
@@ -53,14 +50,21 @@ form.addEventListener("submit", event => {
   const valore = num("valore");
   const mensilita = num("mensilita");
 
-  if (!azienda || !Number.isFinite(dipendenti) ||
-      dipendenti <= 0 || !Number.isFinite(valore) || valore <= 0) {
+  if (
+    !azienda ||
+    !Number.isFinite(dipendenti) ||
+    dipendenti <= 0 ||
+    !Number.isFinite(valore) ||
+    valore <= 0
+  ) {
     alert("Controlla il nome dell'azienda, il numero dei dipendenti e il valore inserito.");
     return;
   }
 
-  if (tipoValore.value === "mensile" &&
-      (!Number.isFinite(mensilita) || mensilita <= 0)) {
+  if (
+    tipoValore.value === "mensile" &&
+    (!Number.isFinite(mensilita) || mensilita <= 0)
+  ) {
     alert("Inserisci un numero di mensilità valido.");
     return;
   }
@@ -81,7 +85,7 @@ form.addEventListener("submit", event => {
     tfr = monte * coeffTFR;
   } else if (tipoValore.value === "tfr") {
     tfr = valore;
-    monte = coeffTFR > 0 ? tfr / coeffTFR : 0;
+    monte = tfr / coeffTFR;
     ral = monte / dipendenti;
   } else if (tipoValore.value === "monte") {
     monte = valore;
@@ -93,23 +97,43 @@ form.addEventListener("submit", event => {
     tfr = monte * coeffTFR;
   }
 
-  const rivalutazione = 0.015 + inflazione * 75 / 100;
-  const deduzioneTFR = dipendenti < 50 ? deduzione50 : deduzioneOltre;
+  const rivalutazione = 0.015 + (inflazione * 75 / 100);
+
+  const deduzioneTFR = dipendenti < 50
+    ? deduzione50
+    : deduzioneOltre;
+
   const deduzione = tfr * deduzioneTFR;
+
   const costiAzienda = dipendenti <= 60;
 
-  const costoRivalutazione = costiAzienda ? tfr * rivalutazione : 0;
+  const costoRivalutazione = costiAzienda
+    ? tfr * rivalutazione
+    : 0;
+
   const costoImposta = costiAzienda
     ? tfr * rivalutazione * impostaRivalutazione
     : 0;
-  const costoFondo = costiAzienda ? monte * fondoGaranzia : 0;
-  const costoOneri = costiAzienda ? monte * oneriImpropri : 0;
+
+  const costoFondo = costiAzienda
+    ? monte * fondoGaranzia
+    : 0;
+
+  const costoOneri = costiAzienda
+    ? monte * oneriImpropri
+    : 0;
 
   const costoTotale =
-    costoRivalutazione + costoImposta + costoFondo + costoOneri;
+    costoRivalutazione +
+    costoImposta +
+    costoFondo +
+    costoOneri;
 
   const delta = costoTotale + deduzione;
-  const deltaPercentuale = tfr > 0 ? delta / tfr * 100 : 0;
+
+  const deltaPercentuale = tfr > 0
+    ? (delta / tfr) * 100
+    : 0;
 
   document.getElementById("result-company").textContent = azienda;
   document.getElementById("out-tfr").textContent = euro(tfr);
@@ -121,6 +145,7 @@ form.addEventListener("submit", event => {
 
   document.getElementById("out-dipendenti").textContent =
     new Intl.NumberFormat("it-IT").format(dipendenti);
+
   document.getElementById("out-ral").textContent = euro(ral);
   document.getElementById("out-monte").textContent = euro(monte);
   document.getElementById("out-rivalutazione-pct").textContent =
@@ -128,12 +153,17 @@ form.addEventListener("submit", event => {
 
   document.getElementById("out-rivalutazione").textContent =
     euro(costoRivalutazione);
+
   document.getElementById("out-imposta").textContent = euro(costoImposta);
   document.getElementById("out-fondo").textContent = euro(costoFondo);
   document.getElementById("out-oneri").textContent = euro(costoOneri);
   document.getElementById("out-costo-totale").textContent = euro(costoTotale);
-  document.getElementById("out-deduzione-dettaglio").textContent = euro(deduzione);
+
+  document.getElementById("out-deduzione-dettaglio").textContent =
+    euro(deduzione);
+
   document.getElementById("out-delta-dettaglio").textContent = euro(delta);
+
   document.getElementById("out-percentuale-dettaglio").textContent =
     percent(deltaPercentuale);
 
@@ -142,14 +172,21 @@ form.addEventListener("submit", event => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
+/* NUOVA ANALISI */
 document.getElementById("new-analysis").addEventListener("click", () => {
   form.reset();
 
   form.querySelectorAll("input").forEach(input => {
-    if (![
-      "coeffTFR", "inflazione", "fondo", "deduzione50",
-      "deduzioneOltre", "imposta", "oneri", "mensilita"
-    ].includes(input.id)) {
+    if (
+      input.id !== "coeffTFR" &&
+      input.id !== "inflazione" &&
+      input.id !== "fondo" &&
+      input.id !== "deduzione50" &&
+      input.id !== "deduzioneOltre" &&
+      input.id !== "imposta" &&
+      input.id !== "oneri" &&
+      input.id !== "mensilita"
+    ) {
       input.value = "";
     }
   });
@@ -159,214 +196,141 @@ document.getElementById("new-analysis").addEventListener("click", () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
-/* GENERAZIONE DEL PDF GRAFICO */
-document.getElementById("print-button").addEventListener("click", async () => {
+/* CREA E APRE IL PDF */
+document.getElementById("print-button").addEventListener("click", async event => {
+  const button = event.currentTarget;
+
+  if (typeof window.html2pdf !== "function") {
+    alert("La libreria PDF non è caricata. Dobbiamo collegarla alla pagina.");
+    return;
+  }
+
   if (resultsPanel.hidden) {
     alert("Prima completa l'analisi.");
     return;
   }
 
-  if (typeof html2pdf === "undefined") {
-    alert("La libreria PDF non è disponibile. Controlla che html2pdf.bundle.min.js sia presente nel progetto GitHub.");
-    return;
-  }
-
-  const button = document.getElementById("print-button");
-  const testoOriginale = button.textContent;
-  let report = null;
-
   button.disabled = true;
-  button.textContent = "Preparazione PDF...";
+  const testoOriginale = button.textContent;
+  button.textContent = "Creazione PDF in corso...";
+
+  let report = null;
+  let pdfWindow = null;
+  let objectUrl = null;
 
   try {
+    /* Apre subito una finestra vuota per evitare il blocco del browser */
+    pdfWindow = window.open("about:blank", "_blank");
+
+    /* Prepara una copia del risultato senza pulsanti */
     report = document.createElement("div");
+    report.id = "pdf-report";
+    report.style.cssText = [
+      "position:fixed",
+      "left:0",
+      "top:0",
+      "width:190mm",
+      "padding:0",
+      "margin:0",
+      "background:#ffffff",
+      "color:#1e293b",
+      "z-index:2147483647",
+      "font-family:Arial,sans-serif",
+      "font-size:10pt",
+      "box-sizing:border-box"
+    ].join(";");
 
-    report.style.cssText = `
-      box-sizing:border-box;
-      width:190mm;
-      padding:8mm;
-      background:#ffffff;
-      color:#1e293b;
-      font-family:Arial,Helvetica,sans-serif;
-      font-size:10px;
-      line-height:1.35;
-      position:absolute;
-      left:0;
-      top:0;
-      z-index:99999;
-    `;
+    const header = document.querySelector(".app-header").cloneNode(true);
+    const contacts = document.querySelector(".contact-bar").cloneNode(true);
+    const results = resultsPanel.cloneNode(true);
 
-    const header = document.createElement("div");
-    header.style.cssText = `
-      display:flex;
-      align-items:center;
-      gap:16px;
-      padding:12px;
-      background:#17365d;
-      color:#ffffff;
-      border-radius:6px;
-      margin-bottom:8px;
-    `;
+    results.hidden = false;
+    results.removeAttribute("hidden");
 
-    const logo = document.createElement("img");
-    logo.src = new URL("./logo-ac-insurance.png", document.baseURI).href;
-    logo.alt = "AC Insurance";
-    logo.style.cssText = "width:105px;height:auto;max-height:65px;object-fit:contain;";
+    results.querySelectorAll(".actions, #new-analysis").forEach(el => el.remove());
 
-    const heading = document.createElement("div");
-    heading.innerHTML = `
-      <div style="font-size:10px;letter-spacing:1px;font-weight:bold;color:#dbeafe">
-        AC INSURANCE
-      </div>
-      <div style="font-size:19px;font-weight:bold;line-height:1.2;margin-top:4px">
-        Analisi personalizzata TFR azienda
-      </div>
-    `;
+    header.style.cssText =
+      "display:flex;align-items:center;gap:12px;padding:8mm;background:#ffffff;color:#17365d;border-bottom:1px solid #dbe3ec;";
 
-    header.append(logo, heading);
-    report.appendChild(header);
-
-    const contacts = document.createElement("div");
-    contacts.style.cssText = `
-      background:#e8eef5;
-      color:#17365d;
-      padding:8px 10px;
-      margin-bottom:10px;
-      text-align:center;
-      font-size:9px;
-      border-bottom:1px solid #dbe3ec;
-    `;
-    contacts.textContent =
-      "Via T. De Amicis 50, 80145 Napoli  |  Telefono: 081 19344322  |  WhatsApp: 081 5520622";
-    report.appendChild(contacts);
-
-    const title = document.createElement("h2");
-    title.textContent = "RIEPILOGO ECONOMICO";
-    title.style.cssText = "font-size:14px;color:#17365d;margin:8px 0 5px;";
-    report.appendChild(title);
-
-    const company = document.createElement("p");
-    company.textContent =
-      "Azienda: " + document.getElementById("result-company").textContent +
-      "   |   Numero dipendenti: " +
-      document.getElementById("out-dipendenti").textContent;
-    company.style.cssText = "font-size:10px;margin:4px 0 8px;";
-    report.appendChild(company);
-
-    const summary = document.querySelector(".summary-grid").cloneNode(true);
-    summary.style.cssText = `
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:7px;
-      margin-bottom:10px;
-    `;
-
-    summary.querySelectorAll(".summary-card").forEach(card => {
-      card.style.cssText = `
-        display:block;
-        box-sizing:border-box;
-        padding:9px;
-        border:1px solid #dbe3ec;
-        border-left:4px solid #245a8d;
-        border-radius:4px;
-        background:#f3f6fa;
-        color:#1e293b;
-        min-height:48px;
-      `;
-
-      const label = card.querySelector("span");
-      if (label) {
-        label.style.cssText =
-          "display:block;font-size:9px;color:#475569;margin-bottom:4px;";
-      }
-
-      const value = card.querySelector("strong");
-      if (value) {
-        value.style.cssText =
-          "display:block;font-size:14px;color:#17365d;font-weight:bold;";
-      }
-
-      const small = card.querySelector("small");
-      if (small) {
-        small.style.cssText =
-          "display:block;font-size:8px;color:#167447;margin-top:3px;";
-      }
-    });
-
-    report.appendChild(summary);
-
-    const sectionTitles = document.createElement("h3");
-    sectionTitles.textContent = "Vantaggi destinazione TFR sul fondo pensione";
-    sectionTitles.style.cssText = "font-size:11px;color:#17365d;margin:8px 0 3px;";
-    report.appendChild(sectionTitles);
-
-    const legal = document.createElement("p");
-    legal.textContent =
-      "Fonte normativa: Decreto legislativo n. 252 del 5 dicembre 2005, art. 10.";
-    legal.style.cssText = "font-size:9px;margin:3px 0 8px;";
-    report.appendChild(legal);
-
-    const detailTitle = document.createElement("h3");
-    detailTitle.textContent = "DETTAGLIO COSTI";
-    detailTitle.style.cssText = "font-size:12px;color:#17365d;margin:7px 0 5px;";
-    report.appendChild(detailTitle);
-
-    const table = document.querySelector(".table-wrap table").cloneNode(true);
-    table.style.cssText = "width:100%;border-collapse:collapse;font-size:9px;";
-
-    table.querySelectorAll("th,td").forEach(cell => {
-      cell.style.cssText =
-        "border:1px solid #dbe3ec;padding:4px 7px;text-align:left;vertical-align:top;";
-    });
-
-    table.querySelectorAll("th").forEach(cell => {
-      cell.style.cssText +=
-        "width:65%;background:#f3f6fa;color:#17365d;font-weight:bold;";
-    });
-
-    table.querySelectorAll(".total-row th,.total-row td").forEach(cell => {
-      cell.style.cssText +=
-        "background:#e8eef5;color:#17365d;font-weight:bold;";
-    });
-
-    report.appendChild(table);
-
-    const disclaimer = document.querySelector(".disclaimer").cloneNode(true);
-    disclaimer.style.cssText = `
-      margin-top:9px;
-      padding:7px 9px;
-      border:1px solid #dbe3ec;
-      background:#f8fafc;
-      font-size:8px;
-      color:#475569;
-    `;
-
-    disclaimer.querySelectorAll("p").forEach(p => {
-      p.style.cssText = "margin:0;";
-    });
-    report.appendChild(disclaimer);
-
-    const footer = document.createElement("div");
-    footer.innerHTML = `
-      <div style="border-top:1px solid #dbe3ec;margin-top:9px;padding-top:5px;text-align:center;color:#17365d;font-size:9px;font-weight:bold">
-        AC INSURANCE
-      </div>
-      <div style="text-align:center;font-size:8px;color:#64748b;margin-top:2px">
-        powered by Marco Rossi
-      </div>
-    `;
-    report.appendChild(footer);
-
-    document.body.appendChild(report);
-
-    if (logo.decode) {
-      await logo.decode().catch(() => {});
+    const logo = header.querySelector("img");
+    if (logo) {
+      logo.style.cssText =
+        "display:block;width:25mm;height:18mm;object-fit:contain;";
     }
 
-    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const title = header.querySelector("h1");
+    if (title) {
+      title.style.cssText =
+        "font-size:17pt;line-height:1.2;text-align:center;color:#17365d;margin:0;";
+    }
+
+    contacts.style.cssText =
+      "display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;padding:10px;background:#e8eef5;color:#17365d;font-size:9pt;";
+
+    results.style.cssText =
+      "display:block!important;width:100%;margin:0;padding:5mm;border:0;border-radius:0;box-shadow:none;background:#ffffff;";
+
+    results.querySelectorAll(".summary-grid").forEach(el => {
+      el.style.cssText =
+        "display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:18px;";
+    });
+
+    results.querySelectorAll(".summary-card").forEach(el => {
+      el.style.cssText =
+        "padding:12px;border:1px solid #dbe3ec;border-radius:8px;break-inside:avoid;";
+    });
+
+    results.querySelectorAll("h2").forEach(el => {
+      el.style.cssText = "font-size:16pt;color:#17365d;margin:0 0 8px;";
+    });
+
+    results.querySelectorAll("h3").forEach(el => {
+      el.style.cssText = "font-size:11pt;color:#17365d;margin:12px 0 7px;";
+    });
+
+    results.querySelectorAll(".table-wrap").forEach(el => {
+      el.style.cssText = "width:100%;overflow:visible;border:1px solid #dbe3ec;";
+    });
+
+    results.querySelectorAll("table").forEach(el => {
+      el.style.cssText = "width:100%;border-collapse:collapse;font-size:9pt;";
+    });
+
+    results.querySelectorAll("th,td").forEach(el => {
+      el.style.cssText =
+        "padding:6px 8px;border-bottom:1px solid #dbe3ec;text-align:left;";
+    });
+
+    results.querySelectorAll("td").forEach(el => {
+      el.style.textAlign = "right";
+    });
+
+    results.querySelectorAll(".disclaimer").forEach(el => {
+      el.style.cssText =
+        "margin-top:12px;padding:10px;background:#e5e7eb;border:1px solid #d1d5db;border-radius:6px;font-size:8pt;line-height:1.4;";
+    });
+
+    report.appendChild(header);
+    report.appendChild(contacts);
+    report.appendChild(results);
+
+    /* Il contenuto deve essere nel documento per essere acquisito */
+    document.body.appendChild(report);
+
+    const reportLogo = report.querySelector("img");
+    if (reportLogo && !reportLogo.complete) {
+      await new Promise(resolve => {
+        reportLogo.addEventListener("load", resolve, { once: true });
+        reportLogo.addEventListener("error", resolve, { once: true });
+      });
+    }
+
+    await new Promise(resolve => requestAnimationFrame(() =>
+      requestAnimationFrame(resolve)
+    ));
 
     const options = {
-      margin: [5, 5, 5, 5],
+      margin: [7, 7, 7, 7],
       filename: "Analisi_TFR_AC_Insurance.pdf",
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: {
@@ -384,7 +348,7 @@ document.getElementById("print-button").addEventListener("click", async () => {
       }
     };
 
-    const pdf = await html2pdf()
+    const pdf = await window.html2pdf()
       .set(options)
       .from(report)
       .toPdf()
@@ -392,41 +356,43 @@ document.getElementById("print-button").addEventListener("click", async () => {
 
     const blob = pdf.output("blob");
 
-    if (!blob || blob.size === 0) {
+    if (!blob || blob.size < 1000) {
       throw new Error("Il PDF generato è vuoto.");
     }
 
-    const file = new File([blob], "Analisi_TFR_AC_Insurance.pdf", {
-      type: "application/pdf"
-    });
+    objectUrl = URL.createObjectURL(blob);
 
-    if (navigator.share && navigator.canShare &&
-        navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        files: [file],
-        title: "Analisi TFR - AC Insurance",
-        text: "Analisi personalizzata TFR azienda"
-      });
+    if (pdfWindow && !pdfWindow.closed) {
+      pdfWindow.location.href = objectUrl;
     } else {
-      pdf.save("Analisi_TFR_AC_Insurance.pdf");
+      /* Se il browser blocca la finestra, apre il PDF nella scheda corrente */
+      window.location.href = objectUrl;
     }
   } catch (error) {
-    console.error("Errore creazione PDF:", error);
-    alert("Errore durante la creazione del PDF: " +
-      (error && error.message ? error.message : "errore sconosciuto"));
+    if (pdfWindow && !pdfWindow.closed) {
+      pdfWindow.close();
+    }
+
+    console.error("Errore PDF:", error);
+    alert(
+      "Non è stato possibile creare il PDF. Riprova. " +
+      (error && error.message ? error.message : "")
+    );
   } finally {
     if (report && report.parentNode) {
       report.parentNode.removeChild(report);
     }
+
     button.disabled = false;
     button.textContent = testoOriginale;
   }
 });
 
-/* SUPPORTO OFFLINE */
-if ("serviceWorker" in navigator &&
-    location.protocol.startsWith("http")) {
+/* FUNZIONAMENTO OFFLINE */
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+    navigator.serviceWorker
+      .register("./service-worker.js")
+      .catch(() => {});
   });
 }
