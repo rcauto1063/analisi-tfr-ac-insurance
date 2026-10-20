@@ -1,0 +1,26 @@
+
+{
+  "name": "AC Insurance - Analisi personalizzata TFR azienda",
+  "short_name": "Analisi TFR",
+  "description": "Analisi personalizzata TFR azienda - AC Insurance",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#17365d",
+  "lang": "it",
+  "icons": [
+    {
+      "src": "./logo-ac-insurance.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./logo-ac-insurance.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
