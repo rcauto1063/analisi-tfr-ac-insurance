@@ -221,11 +221,10 @@ document.getElementById("print-button").addEventListener("click", async event =>
     return;
   }
 
-  /* La finestra viene aperta direttamente dal clic dell'utente. */
   const pdfWindow = window.open("about:blank", "_blank");
 
   if (!pdfWindow) {
-    alert("Safari ha bloccato la finestra. Consenti i popup per questo sito e riprova.");
+    alert("Il browser ha bloccato la finestra. Consenti i popup per questo sito e riprova.");
     return;
   }
 
@@ -240,22 +239,39 @@ document.getElementById("print-button").addEventListener("click", async event =>
     );
     pdfWindow.document.close();
   } catch (error) {
-    /* Proseguiamo con la generazione del documento. */
+    /* Proseguiamo con la generazione. */
   }
 
   button.disabled = true;
   const testoOriginale = button.textContent;
   button.textContent = "Creazione PDF in corso...";
 
+  let overlay = null;
   let report = null;
   let objectUrl = null;
 
   try {
-    report = document.createElement("div");
+    /*
+      Creiamo una pagina di lavoro visibile.
+      Non posizioniamo il contenuto fuori dallo schermo:
+      questo è il cambiamento principale rispetto alla versione precedente.
+    */
+    overlay = document.createElement("div");
 
+    overlay.style.cssText =
+      "position:fixed;inset:0;z-index:2147483647;" +
+      "overflow:auto;background:#ffffff;color:#1e293b;" +
+      "font-family:Arial,sans-serif;";
+
+    const status = document.createElement("div");
+    status.textContent = "Preparazione del PDF in corso…";
+    status.style.cssText =
+      "padding:10px 16px;background:#17365d;color:#ffffff;" +
+      "font-size:14px;text-align:center;";
+
+    report = document.createElement("div");
     report.style.cssText =
-      "position:absolute;left:-10000px;top:0;" +
-      "width:700px;padding:20px;margin:0;" +
+      "width:794px;max-width:none;padding:20px;margin:0 auto;" +
       "background:#ffffff;color:#1e293b;" +
       "font-family:Arial,sans-serif;font-size:12px;" +
       "box-sizing:border-box;";
@@ -319,11 +335,13 @@ document.getElementById("print-button").addEventListener("click", async event =>
     });
 
     results.querySelectorAll("h2").forEach(el => {
-      el.style.cssText = "font-size:20px;color:#17365d;margin:0 0 10px;";
+      el.style.cssText =
+        "font-size:20px;color:#17365d;margin:0 0 10px;";
     });
 
     results.querySelectorAll("h3").forEach(el => {
-      el.style.cssText = "font-size:15px;color:#17365d;margin:16px 0 8px;";
+      el.style.cssText =
+        "font-size:15px;color:#17365d;margin:16px 0 8px;";
     });
 
     results.querySelectorAll(".table-wrap").forEach(el => {
@@ -332,7 +350,8 @@ document.getElementById("print-button").addEventListener("click", async event =>
 
     results.querySelectorAll("table").forEach(el => {
       el.style.cssText =
-        "width:100%;border-collapse:collapse;font-size:11px;table-layout:auto;";
+        "width:100%;border-collapse:collapse;font-size:11px;" +
+        "table-layout:auto;";
     });
 
     results.querySelectorAll("th,td").forEach(el => {
@@ -352,8 +371,8 @@ document.getElementById("print-button").addEventListener("click", async event =>
     });
 
     const footer = document.createElement("p");
-
-    footer.textContent = "AC Insurance · Analisi personalizzata TFR azienda";
+    footer.textContent =
+      "AC Insurance · Analisi personalizzata TFR azienda";
     footer.style.cssText =
       "padding:12px;text-align:center;color:#64748b;font-size:10px;";
 
@@ -361,21 +380,36 @@ document.getElementById("print-button").addEventListener("click", async event =>
     report.appendChild(contacts);
     report.appendChild(results);
     report.appendChild(footer);
-    document.body.appendChild(report);
 
-    /* Riduciamo il carico di rendering per Safari su iPhone e iPad. */
+    overlay.appendChild(status);
+    overlay.appendChild(report);
+    document.body.appendChild(overlay);
+
+    /*
+      Lasciamo al browser il tempo di disegnare il contenuto
+      prima di avviare html2canvas.
+    */
+    await new Promise(resolve => requestAnimationFrame(() => {
+      requestAnimationFrame(resolve);
+    }));
+
     const options = {
       margin: 7,
       filename: "Analisi_TFR_AC_Insurance.pdf",
-      image: { type: "jpeg", quality: 0.92 },
+      image: {
+        type: "jpeg",
+        quality: 0.92
+      },
       html2canvas: {
-        scale: 1,
+        scale: 1.5,
         backgroundColor: "#ffffff",
-        logging: false,
+        logging: true,
         useCORS: true,
         allowTaint: false,
         scrollX: 0,
-        scrollY: 0
+        scrollY: 0,
+        windowWidth: 794,
+        width: 794
       },
       jsPDF: {
         unit: "mm",
@@ -389,7 +423,6 @@ document.getElementById("print-button").addEventListener("click", async event =>
       }
     };
 
-    /* Generazione del PDF senza attendere font o animazioni esterne. */
     const pdf = await window.html2pdf()
       .set(options)
       .from(report)
@@ -409,7 +442,7 @@ document.getElementById("print-button").addEventListener("click", async event =>
     objectUrl = URL.createObjectURL(blob);
     pdfWindow.location.href = objectUrl;
 
-    /* Manteniamo l'URL disponibile per il visualizzatore PDF di Safari. */
+    /* Non revocare l'URL subito: Safari potrebbe averne ancora bisogno. */
   } catch (error) {
     console.error("Errore PDF:", error);
 
@@ -422,8 +455,8 @@ document.getElementById("print-button").addEventListener("click", async event =>
       (error && error.message ? error.message : "riprova.")
     );
   } finally {
-    if (report && report.parentNode) {
-      report.parentNode.removeChild(report);
+    if (overlay && overlay.parentNode) {
+      overlay.parentNode.removeChild(overlay);
     }
 
     button.disabled = false;
