@@ -207,7 +207,7 @@ document.getElementById("new-analysis").addEventListener("click", () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
-/* CREAZIONE E CONDIVISIONE DEL PDF */
+/* CREAZIONE E CONDIVISIONE PDF */
 document.getElementById("print-button").addEventListener(
   "click",
   async () => {
@@ -225,7 +225,6 @@ document.getElementById("print-button").addEventListener(
 
     const button = document.getElementById("print-button");
     const testoOriginale = button.textContent;
-
     let report = null;
 
     button.disabled = true;
@@ -238,15 +237,16 @@ document.getElementById("print-button").addEventListener(
         box-sizing: border-box;
         width: 190mm;
         padding: 8mm;
+        margin: 0;
         background: #ffffff;
         color: #1e293b;
         font-family: Arial, Helvetica, sans-serif;
         font-size: 10px;
         line-height: 1.35;
-        position: fixed;
+        position: absolute;
         top: 0;
         left: 0;
-        z-index: 2147483647;
+        z-index: 9999;
       `;
 
       const header = document.createElement("div");
@@ -505,10 +505,10 @@ document.getElementById("print-button").addEventListener(
 
       report.appendChild(footer);
 
-      /* Inserisce il report nel documento prima della conversione */
+      /* Inserisce il report nel documento */
       document.body.appendChild(report);
 
-      /* Attende il caricamento del logo, se necessario */
+      /* Attende il caricamento del logo */
       if (!logo.complete) {
         await new Promise(resolve => {
           logo.onload = resolve;
@@ -516,35 +516,35 @@ document.getElementById("print-button").addEventListener(
         });
       }
 
-      /* Lascia al browser il tempo di disegnare il report */
-      await new Promise(resolve =>
-        requestAnimationFrame(() =>
-          requestAnimationFrame(resolve)
-        )
-      );
+      /* Attende il disegno del report da parte del browser */
+      await new Promise(resolve => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(resolve);
+        });
+      });
 
+      /* Impostazioni alleggerite per Safari su iPhone e iPad */
       const options = {
         margin: [5, 5, 5, 5],
         filename: "Analisi_TFR_AC_Insurance.pdf",
         image: {
           type: "jpeg",
-          quality: 0.98
+          quality: 0.95
         },
         html2canvas: {
-          scale: 2,
+          scale: 1,
           useCORS: true,
           backgroundColor: "#ffffff",
-          logging: false,
+          logging: true,
           scrollX: 0,
-          scrollY: 0
+          scrollY: 0,
+          allowTaint: false
         },
         jsPDF: {
           unit: "mm",
           format: "a4",
-          orientation: "portrait"
-        },
-        pagebreak: {
-          mode: ["css", "legacy"]
+          orientation: "portrait",
+          compress: true
         }
       };
 
@@ -554,7 +554,15 @@ document.getElementById("print-button").addEventListener(
         .toPdf()
         .get("pdf");
 
+      if (!pdf || pdf.internal.pages.length <= 1) {
+        throw new Error("Il PDF non contiene pagine valide.");
+      }
+
       const blob = pdf.output("blob");
+
+      if (!blob || blob.size === 0) {
+        throw new Error("Il PDF generato è vuoto.");
+      }
 
       const file = new File(
         [blob],
@@ -562,7 +570,7 @@ document.getElementById("print-button").addEventListener(
         { type: "application/pdf" }
       );
 
-      /* Condivisione diretta su iPhone/iPad, quando supportata */
+      /* Condivisione diretta del PDF */
       if (
         navigator.share &&
         navigator.canShare &&
@@ -574,14 +582,19 @@ document.getElementById("print-button").addEventListener(
           text: "Analisi personalizzata TFR azienda"
         });
       } else {
-        /* Salvataggio PDF sugli altri browser */
+        /* Salvataggio PDF nei browser che non supportano la condivisione */
         pdf.save("Analisi_TFR_AC_Insurance.pdf");
       }
     } catch (error) {
       console.error("Errore creazione PDF:", error);
 
+      const dettaglio = error && error.message
+        ? error.message
+        : String(error);
+
       alert(
-        "Non è stato possibile creare il PDF. Riprova. Se il problema continua, verificheremo il messaggio tecnico dell'errore."
+        "Non è stato possibile creare il PDF.\n\nDettaglio tecnico: " +
+        dettaglio
       );
     } finally {
       if (report && report.parentNode) {
@@ -602,6 +615,8 @@ if (
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("./service-worker.js")
-      .catch(() => {});
+      .catch(error => {
+        console.error("Errore registrazione modalità offline:", error);
+      });
   });
 }
