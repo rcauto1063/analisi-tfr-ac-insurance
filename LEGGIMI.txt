@@ -1,0 +1,14 @@
+ANALISI PERSONALIZZATA TFR - PROTOTIPO INIZIALE
+
+Contenuto:
+- index.html: struttura della pagina
+- style.css: grafica adattabile a PC e iPad
+- app.js: calcoli e interazioni
+- manifest.webmanifest: impostazioni per installazione come app
+- service-worker.js: cache offline per uso tramite server HTTP/HTTPS
+
+IMPORTANTE:
+Questo è un prototipo iniziale da verificare, non una versione pronta per l'uso con clienti.
+I parametri e le formule riprendono il modello descritto, ma vanno confrontati con il file Excel VBA prima dell'uso operativo.
+Il funzionamento offline e l'installazione PWA richiedono che l'app sia servita tramite localhost durante i test e tramite HTTPS per l'installazione su iPad. Aprire index.html direttamente con doppio clic non attiva il service worker.
+Non inserisce uno storico delle analisi. I valori rimangono temporaneamente nella pagina e non vengono inviati a un server.

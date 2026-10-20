@@ -1,0 +1,239 @@
+
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#17365d">
+  <meta name="description" content="Analisi personalizzata TFR azienda - AC Insurance">
+  <title>AC Insurance | Analisi personalizzata TFR azienda</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <img
+      src="./logo-ac-insurance.png"
+      alt="Logo AC Insurance"
+      class="brand-logo"
+      style="display:block; width:150px; height:auto; max-height:100px; object-fit:contain;"
+    >
+    <div class="brand-text">
+      <h1>Analisi personalizzata TFR azienda</h1>
+    </div>
+  </header>
+
+  <!-- RECAPITI AC INSURANCE -->
+  <div class="contact-bar" style="
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px 24px;
+    padding:12px 16px;
+    background:#e8eef5;
+    border-bottom:1px solid #dbe3ec;
+    color:#17365d;
+    font-size:0.88rem;
+    line-height:1.5;
+    text-align:center;
+  ">
+    <span>
+      <strong>Indirizzo:</strong>
+      Via T. De Amicis 50, 80145 Napoli
+    </span>
+
+    <span>
+      <strong>Telefono:</strong>
+      <a href="tel:+3908119344322" style="color:#17365d; text-decoration:none; font-weight:600;">
+        081 19344322
+      </a>
+    </span>
+
+    <span>
+      <strong>WhatsApp:</strong>
+      <a href="https://wa.me/390815520622" target="_blank" rel="noopener noreferrer" style="color:#167447; text-decoration:none; font-weight:700;">
+        081 5520622
+      </a>
+    </span>
+  </div>
+
+  <main class="container">
+    <section class="panel" id="input-panel">
+      <div class="section-heading">
+        <div>
+          <h2>Nuova analisi</h2>
+          <p>Inserisci i dati aziendali e seleziona il valore che conosci.</p>
+        </div>
+        <span class="status-pill">Offline-ready</span>
+      </div>
+
+      <form id="analysis-form">
+        <div class="field">
+          <label for="azienda">Nome azienda</label>
+          <input id="azienda" name="azienda" autocomplete="organization" required>
+        </div>
+
+        <div class="field">
+          <label for="dipendenti">Numero dipendenti</label>
+          <input id="dipendenti" name="dipendenti" type="number" min="1" step="1" inputmode="numeric" required>
+        </div>
+
+        <div class="field">
+          <label for="tipoValore">Dato disponibile</label>
+          <select id="tipoValore" name="tipoValore">
+            <option value="ral">RAL media annua</option>
+            <option value="tfr">TFR annuo</option>
+            <option value="monte">Monte stipendi</option>
+            <option value="mensile">Stipendio mensile</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="valore" id="valore-label">RAL media annua (€)</label>
+          <input id="valore" name="valore" type="number" min="0.01" step="0.01" inputmode="decimal" required>
+        </div>
+
+        <div class="field" id="mensilita-field" hidden>
+          <label for="mensilita">Numero mensilità</label>
+          <input id="mensilita" name="mensilita" type="number" min="1" step="1" value="13" inputmode="numeric">
+        </div>
+
+        <details class="parameters">
+          <summary>Parametri di calcolo</summary>
+          <p class="hint">Valori iniziali ripresi dal modello Excel. Puoi modificarli per questa analisi.</p>
+
+          <div class="parameter-grid">
+            <div class="field">
+              <label for="coeffTFR">Coefficiente TFR (%)</label>
+              <input id="coeffTFR" type="number" min="0" step="0.01" value="6.91">
+            </div>
+
+            <div class="field">
+              <label for="inflazione">Inflazione ISTAT (%)</label>
+              <input id="inflazione" type="number" min="0" step="0.001" value="1.5">
+            </div>
+
+            <div class="field">
+              <label for="fondo">Fondo garanzia INPS (%)</label>
+              <input id="fondo" type="number" min="0" step="0.01" value="0.20">
+            </div>
+
+            <div class="field">
+              <label for="deduzione50">Deduzione fino a 49 dipendenti (%)</label>
+              <input id="deduzione50" type="number" min="0" step="0.01" value="6">
+            </div>
+
+            <div class="field">
+              <label for="deduzioneOltre">Deduzione da 50 dipendenti (%)</label>
+              <input id="deduzioneOltre" type="number" min="0" step="0.01" value="4">
+            </div>
+
+            <div class="field">
+              <label for="imposta">Imposta rivalutazione (%)</label>
+              <input id="imposta" type="number" min="0" step="0.01" value="17">
+            </div>
+
+            <div class="field">
+              <label for="oneri">Oneri impropri (%)</label>
+              <input id="oneri" type="number" min="0" step="0.01" value="0.28">
+            </div>
+          </div>
+
+          <p class="hint">La rivalutazione è calcolata con la formula del modello attuale: 1,5% + 75% dell'inflazione inserita.</p>
+        </details>
+
+        <div class="actions">
+          <button type="submit" class="primary">Calcola analisi</button>
+          <button type="reset" class="secondary">Azzera campi</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel results" id="results-panel" hidden aria-live="polite">
+      <div class="section-heading">
+        <div>
+          <h2>Riepilogo dell'analisi</h2>
+          <p id="result-company"></p>
+        </div>
+        <button id="new-analysis" class="secondary compact" type="button">Nuova analisi</button>
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-card">
+          <span>TFR annuo</span>
+          <strong id="out-tfr"></strong>
+        </div>
+
+        <div class="summary-card">
+          <span>Costo TFR in azienda</span>
+          <strong id="out-cost-positive"></strong>
+        </div>
+
+        <div class="summary-card">
+          <span>Deduzione fiscale</span>
+          <strong id="out-deduzione"></strong>
+        </div>
+
+        <div class="summary-card highlight">
+          <span>Delta complessivo</span>
+          <strong id="out-delta"></strong>
+          <small id="out-percentuale"></small>
+        </div>
+      </div>
+
+      <h3>Vantaggi destinazione TFR sul fondo pensione</h3>
+
+      <p class="legal-reference">
+        Fonte normativa: Decreto legislativo n. 252 del 5 dicembre 2005, art. 10.
+      </p>
+
+      <h3>Dettaglio costi</h3>
+
+      <div class="table-wrap">
+        <table>
+          <tbody>
+            <tr><th>Numero dipendenti</th><td id="out-dipendenti"></td></tr>
+            <tr><th>RAL media annua</th><td id="out-ral"></td></tr>
+            <tr><th>Monte stipendi</th><td id="out-monte"></td></tr>
+            <tr><th>Rivalutazione TFR</th><td id="out-rivalutazione-pct"></td></tr>
+            <tr><th>Costo rivalutazione TFR</th><td id="out-rivalutazione"></td></tr>
+            <tr><th>Imposta sulla rivalutazione</th><td id="out-imposta"></td></tr>
+            <tr><th>Fondo garanzia INPS</th><td id="out-fondo"></td></tr>
+            <tr><th>Oneri impropri</th><td id="out-oneri"></td></tr>
+            <tr class="total-row"><th>Totale costi evitabili</th><td id="out-costo-totale"></td></tr>
+            <tr><th>Deduzione fiscale</th><td id="out-deduzione-dettaglio"></td></tr>
+            <tr class="total-row"><th>Delta complessivo (€)</th><td id="out-delta-dettaglio"></td></tr>
+            <tr class="total-row"><th>Delta sul TFR annuo</th><td id="out-percentuale-dettaglio"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="disclaimer">
+        <p>
+          Nota: i calcoli riportati nella presente analisi sono da considerarsi
+          puramente indicativi e sono elaborati sulla base delle informazioni
+          e dei dati forniti dall'azienda. Gli importi risultanti sono pertanto
+          soggetti a variazioni in funzione dei dati effettivi e delle condizioni
+          applicabili.
+        </p>
+      </div>
+
+      <div class="actions">
+        <button id="print-button" class="secondary" type="button">Stampa / salva PDF (PC)</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <strong>AC Insurance</strong> · Analisi personalizzata TFR azienda
+    <div style="font-size:0.8rem; font-style:italic; margin-top:4px;">
+      powered by Marco Rossi
+    </div>
+    <p>I dati non vengono salvati in uno storico.</p>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
