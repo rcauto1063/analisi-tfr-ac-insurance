@@ -26,10 +26,14 @@ const percent = n =>
 
 const num = id => Number(document.getElementById(id).value);
 
+/* CAMBIO TIPO DI VALORE */
+
 tipoValore.addEventListener("change", () => {
   valoreLabel.textContent = labels[tipoValore.value];
   mensilitaField.hidden = tipoValore.value !== "mensile";
 });
+
+/* RESET DEL MODULO */
 
 form.addEventListener("reset", () => {
   setTimeout(() => {
@@ -40,6 +44,8 @@ form.addEventListener("reset", () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, 0);
 });
+
+/* CALCOLO DELL'ANALISI */
 
 form.addEventListener("submit", event => {
   event.preventDefault();
@@ -57,7 +63,9 @@ form.addEventListener("submit", event => {
     !Number.isFinite(valore) ||
     valore <= 0
   ) {
-    alert("Controlla il nome dell'azienda, il numero dei dipendenti e il valore inserito.");
+    alert(
+      "Controlla il nome dell'azienda, il numero dei dipendenti e il valore inserito."
+    );
     return;
   }
 
@@ -181,6 +189,7 @@ form.addEventListener("submit", event => {
 });
 
 /* NUOVA ANALISI */
+
 document.getElementById("new-analysis").addEventListener("click", () => {
   form.reset();
 
@@ -206,7 +215,8 @@ document.getElementById("new-analysis").addEventListener("click", () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
-/* CREA E APRE IL PDF */
+/* GENERAZIONE E APERTURA DEL PDF */
+
 document.getElementById("print-button").addEventListener("click", async event => {
   const button = event.currentTarget;
 
@@ -223,7 +233,9 @@ document.getElementById("print-button").addEventListener("click", async event =>
   const pdfWindow = window.open("about:blank", "_blank");
 
   if (!pdfWindow) {
-    alert("Il browser ha bloccato la finestra. Consenti i popup per questo sito e riprova.");
+    alert(
+      "Il browser ha bloccato la finestra. Consenti i popup per questo sito e riprova."
+    );
     return;
   }
 
@@ -237,7 +249,9 @@ document.getElementById("print-button").addEventListener("click", async event =>
       "<p>Preparazione del PDF in corso...</p></body></html>"
     );
     pdfWindow.document.close();
-  } catch (error) {}
+  } catch (error) {
+    console.error("Errore apertura finestra PDF:", error);
+  }
 
   button.disabled = true;
   const testoOriginale = button.textContent;
@@ -249,15 +263,21 @@ document.getElementById("print-button").addEventListener("click", async event =>
   try {
     report = document.createElement("div");
 
-    /*
-      Dimensioni A4 in millimetri.
-      Il contenitore resta nel DOM durante la generazione.
-    */
-    report.style.cssText =
-      "position:fixed;top:0;left:0;width:186mm;" +
-      "padding:8mm;margin:0;background:#ffffff;color:#1e293b;" +
-      "font-family:Arial,sans-serif;font-size:11px;" +
-      "box-sizing:border-box;z-index:2147483647;";
+    report.style.cssText = [
+      "position:absolute",
+      "top:0",
+      "left:0",
+      "width:794px",
+      "padding:28px",
+      "margin:0",
+      "background:#ffffff",
+      "color:#1e293b",
+      "font-family:Arial,sans-serif",
+      "font-size:12px",
+      "line-height:1.45",
+      "box-sizing:border-box",
+      "z-index:2147483647"
+    ].join(";");
 
     const header = document.querySelector(".app-header").cloneNode(true);
     const contacts = document.querySelector(".contact-bar").cloneNode(true);
@@ -269,28 +289,49 @@ document.getElementById("print-button").addEventListener("click", async event =>
     results.querySelectorAll(".actions, #new-analysis, #print-button")
       .forEach(el => el.remove());
 
-    header.style.cssText =
-      "display:block;padding:12px;background:#ffffff;color:#17365d;" +
-      "border-bottom:1px solid #dbe3ec;text-align:center;";
+    header.style.cssText = [
+      "display:block",
+      "width:100%",
+      "padding:12px",
+      "margin:0",
+      "background:#ffffff",
+      "color:#17365d",
+      "border-bottom:1px solid #dbe3ec",
+      "text-align:center",
+      "box-sizing:border-box"
+    ].join(";");
 
     const logo = header.querySelector("img");
 
     if (logo) {
-      logo.style.cssText =
-        "display:block;width:100px;height:auto;max-height:65px;" +
-        "object-fit:contain;margin:0 auto 8px;";
+      logo.style.cssText = [
+        "display:block",
+        "width:100px",
+        "height:auto",
+        "max-height:65px",
+        "object-fit:contain",
+        "margin:0 auto 8px"
+      ].join(";");
     }
 
     const title = header.querySelector("h1");
 
     if (title) {
       title.style.cssText =
-        "font-size:19px;line-height:1.3;color:#17365d;margin:0;";
+        "font-size:20px;line-height:1.3;color:#17365d;margin:0;";
     }
 
-    contacts.style.cssText =
-      "display:block;padding:8px;background:#e8eef5;" +
-      "color:#17365d;font-size:10px;line-height:1.6;";
+    contacts.style.cssText = [
+      "display:block",
+      "width:100%",
+      "padding:10px",
+      "margin:0",
+      "background:#e8eef5",
+      "color:#17365d",
+      "font-size:11px",
+      "line-height:1.6",
+      "box-sizing:border-box"
+    ].join(";");
 
     contacts.querySelectorAll("span").forEach(el => {
       el.style.display = "block";
@@ -299,52 +340,88 @@ document.getElementById("print-button").addEventListener("click", async event =>
     contacts.querySelectorAll("a").forEach(el => {
       el.style.color = "#17365d";
       el.style.textDecoration = "none";
+      el.style.overflowWrap = "anywhere";
     });
 
-    results.style.cssText =
-      "display:block;width:100%;margin:0;padding:10px;" +
-      "border:0;border-radius:0;box-shadow:none;" +
-      "background:#ffffff;box-sizing:border-box;";
+    results.style.cssText = [
+      "display:block",
+      "width:100%",
+      "max-width:none",
+      "min-width:0",
+      "margin:0",
+      "padding:14px 0",
+      "border:0",
+      "border-radius:0",
+      "box-shadow:none",
+      "background:#ffffff",
+      "box-sizing:border-box",
+      "overflow:visible"
+    ].join(";");
 
     results.querySelectorAll(".summary-grid").forEach(el => {
-      el.style.cssText =
-        "display:grid;grid-template-columns:repeat(2,minmax(0,1fr));" +
-        "gap:8px;margin-bottom:14px;width:100%;";
+      el.style.cssText = [
+        "display:grid",
+        "grid-template-columns:repeat(2,minmax(0,1fr))",
+        "gap:10px",
+        "margin:0 0 16px",
+        "width:100%",
+        "box-sizing:border-box"
+      ].join(";");
     });
 
     results.querySelectorAll(".summary-card").forEach(el => {
-      el.style.cssText =
-        "display:block;width:auto;min-width:0;margin:0;padding:9px;" +
-        "border:1px solid #dbe3ec;border-radius:5px;" +
-        "box-sizing:border-box;overflow-wrap:anywhere;";
+      el.style.cssText = [
+        "display:block",
+        "width:auto",
+        "min-width:0",
+        "margin:0",
+        "padding:10px",
+        "border:1px solid #dbe3ec",
+        "border-radius:5px",
+        "box-sizing:border-box",
+        "overflow-wrap:anywhere",
+        "background:#ffffff"
+      ].join(";");
     });
 
     results.querySelectorAll("h2").forEach(el => {
       el.style.cssText =
-        "font-size:17px;line-height:1.3;color:#17365d;margin:0 0 9px;";
+        "font-size:18px;line-height:1.3;color:#17365d;margin:0 0 10px;";
     });
 
     results.querySelectorAll("h3").forEach(el => {
       el.style.cssText =
-        "font-size:13px;line-height:1.3;color:#17365d;margin:12px 0 7px;";
+        "font-size:14px;line-height:1.3;color:#17365d;margin:14px 0 8px;";
     });
 
     results.querySelectorAll(".table-wrap").forEach(el => {
       el.style.cssText =
-        "display:block;width:100%;max-width:100%;overflow:visible;";
+        "display:block;width:100%;max-width:none;overflow:visible;";
     });
 
     results.querySelectorAll("table").forEach(el => {
-      el.style.cssText =
-        "display:table;width:100%;max-width:100%;" +
-        "border-collapse:collapse;table-layout:fixed;font-size:10px;";
+      el.style.cssText = [
+        "display:table",
+        "width:100%",
+        "max-width:100%",
+        "border-collapse:collapse",
+        "table-layout:fixed",
+        "font-size:11px",
+        "box-sizing:border-box"
+      ].join(";");
     });
 
     results.querySelectorAll("th,td").forEach(el => {
-      el.style.cssText =
-        "padding:5px 4px;border-bottom:1px solid #dbe3ec;" +
-        "vertical-align:top;text-align:left;white-space:normal;" +
-        "overflow-wrap:anywhere;word-break:normal;";
+      el.style.cssText = [
+        "padding:6px",
+        "border-bottom:1px solid #dbe3ec",
+        "vertical-align:top",
+        "text-align:left",
+        "white-space:normal",
+        "overflow-wrap:anywhere",
+        "word-break:normal",
+        "box-sizing:border-box"
+      ].join(";");
     });
 
     results.querySelectorAll("td").forEach(el => {
@@ -352,17 +429,25 @@ document.getElementById("print-button").addEventListener("click", async event =>
     });
 
     results.querySelectorAll(".disclaimer").forEach(el => {
-      el.style.cssText =
-        "display:block;margin-top:12px;padding:9px;" +
-        "background:#f1f3f5;border:1px solid #d1d5db;" +
-        "font-size:9px;line-height:1.45;white-space:normal;";
+      el.style.cssText = [
+        "display:block",
+        "width:100%",
+        "margin-top:14px",
+        "padding:10px",
+        "background:#f1f3f5",
+        "border:1px solid #d1d5db",
+        "font-size:10px",
+        "line-height:1.5",
+        "white-space:normal",
+        "box-sizing:border-box"
+      ].join(";");
     });
 
     const footer = document.createElement("p");
     footer.textContent =
       "AC Insurance · Analisi personalizzata TFR azienda";
     footer.style.cssText =
-      "padding:8px 0 0;text-align:center;color:#64748b;font-size:9px;";
+      "padding:10px 0 0;margin:0;text-align:center;color:#64748b;font-size:10px;";
 
     report.appendChild(header);
     report.appendChild(contacts);
@@ -372,13 +457,18 @@ document.getElementById("print-button").addEventListener("click", async event =>
     document.body.appendChild(report);
 
     await new Promise(resolve => {
-      requestAnimationFrame(() => requestAnimationFrame(resolve));
+      requestAnimationFrame(() => {
+        requestAnimationFrame(resolve);
+      });
     });
 
-    const altezzaReport = Math.ceil(report.scrollHeight);
+    const larghezzaReport = report.getBoundingClientRect().width;
+    const altezzaReport = report.scrollHeight;
 
-    if (altezzaReport < 200) {
-      throw new Error("Il contenuto del riepilogo non è stato caricato correttamente.");
+    if (larghezzaReport < 700 || altezzaReport < 200) {
+      throw new Error(
+        "Le dimensioni del riepilogo non sono corrette. Riprova."
+      );
     }
 
     const options = {
@@ -386,18 +476,18 @@ document.getElementById("print-button").addEventListener("click", async event =>
       filename: "Analisi_TFR_AC_Insurance.pdf",
       image: {
         type: "jpeg",
-        quality: 0.95
+        quality: 0.98
       },
       html2canvas: {
-        scale: 1.5,
+        scale: 2,
         backgroundColor: "#ffffff",
-        logging: true,
+        logging: false,
         useCORS: true,
         allowTaint: false,
         scrollX: 0,
         scrollY: 0,
-        windowWidth: 794,
-        windowHeight: altezzaReport
+        windowWidth: 850,
+        windowHeight: Math.max(1100, altezzaReport + 100)
       },
       jsPDF: {
         unit: "mm",
@@ -441,6 +531,7 @@ document.getElementById("print-button").addEventListener("click", async event =>
       "Errore durante la creazione del PDF: " +
       (error && error.message ? error.message : "riprova.")
     );
+
   } finally {
     if (report && report.parentNode) {
       report.parentNode.removeChild(report);
@@ -452,6 +543,7 @@ document.getElementById("print-button").addEventListener("click", async event =>
 });
 
 /* FUNZIONAMENTO OFFLINE */
+
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
