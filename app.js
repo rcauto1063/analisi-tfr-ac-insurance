@@ -104,7 +104,6 @@ form.addEventListener("submit", event => {
     : deduzioneOltre;
 
   const deduzione = tfr * deduzioneTFR;
-
   const costiAzienda = dipendenti <= 60;
 
   const costoRivalutazione = costiAzienda
@@ -130,10 +129,7 @@ form.addEventListener("submit", event => {
     costoOneri;
 
   const delta = costoTotale + deduzione;
-
-  const deltaPercentuale = tfr > 0
-    ? (delta / tfr) * 100
-    : 0;
+  const deltaPercentuale = tfr > 0 ? (delta / tfr) * 100 : 0;
 
   document.getElementById("result-company").textContent = azienda;
   document.getElementById("out-tfr").textContent = euro(tfr);
@@ -158,12 +154,8 @@ form.addEventListener("submit", event => {
   document.getElementById("out-fondo").textContent = euro(costoFondo);
   document.getElementById("out-oneri").textContent = euro(costoOneri);
   document.getElementById("out-costo-totale").textContent = euro(costoTotale);
-
-  document.getElementById("out-deduzione-dettaglio").textContent =
-    euro(deduzione);
-
+  document.getElementById("out-deduzione-dettaglio").textContent = euro(deduzione);
   document.getElementById("out-delta-dettaglio").textContent = euro(delta);
-
   document.getElementById("out-percentuale-dettaglio").textContent =
     percent(deltaPercentuale);
 
@@ -178,14 +170,16 @@ document.getElementById("new-analysis").addEventListener("click", () => {
 
   form.querySelectorAll("input").forEach(input => {
     if (
-      input.id !== "coeffTFR" &&
-      input.id !== "inflazione" &&
-      input.id !== "fondo" &&
-      input.id !== "deduzione50" &&
-      input.id !== "deduzioneOltre" &&
-      input.id !== "imposta" &&
-      input.id !== "oneri" &&
-      input.id !== "mensilita"
+      ![
+        "coeffTFR",
+        "inflazione",
+        "fondo",
+        "deduzione50",
+        "deduzioneOltre",
+        "imposta",
+        "oneri",
+        "mensilita"
+      ].includes(input.id)
     ) {
       input.value = "";
     }
@@ -201,7 +195,7 @@ document.getElementById("print-button").addEventListener("click", async event =>
   const button = event.currentTarget;
 
   if (typeof window.html2pdf !== "function") {
-    alert("La libreria PDF non è caricata. Dobbiamo collegarla alla pagina.");
+    alert("La libreria PDF non è caricata. Ricarica la pagina e riprova.");
     return;
   }
 
@@ -219,14 +213,12 @@ document.getElementById("print-button").addEventListener("click", async event =>
   let objectUrl = null;
 
   try {
-    /* Apre subito una finestra vuota per evitare il blocco del browser */
     pdfWindow = window.open("about:blank", "_blank");
 
-    /* Prepara una copia del risultato senza pulsanti */
     report = document.createElement("div");
     report.id = "pdf-report";
     report.style.cssText = [
-      "position:fixed",
+      "position:absolute",
       "left:0",
       "top:0",
       "width:190mm",
@@ -234,10 +226,10 @@ document.getElementById("print-button").addEventListener("click", async event =>
       "margin:0",
       "background:#ffffff",
       "color:#1e293b",
-      "z-index:2147483647",
       "font-family:Arial,sans-serif",
       "font-size:10pt",
-      "box-sizing:border-box"
+      "box-sizing:border-box",
+      "z-index:2147483647"
     ].join(";");
 
     const header = document.querySelector(".app-header").cloneNode(true);
@@ -246,8 +238,8 @@ document.getElementById("print-button").addEventListener("click", async event =>
 
     results.hidden = false;
     results.removeAttribute("hidden");
-
-    results.querySelectorAll(".actions, #new-analysis").forEach(el => el.remove());
+    results.querySelectorAll(".actions, #new-analysis, #print-button")
+      .forEach(el => el.remove());
 
     header.style.cssText =
       "display:flex;align-items:center;gap:12px;padding:8mm;background:#ffffff;color:#17365d;border-bottom:1px solid #dbe3ec;";
@@ -268,7 +260,7 @@ document.getElementById("print-button").addEventListener("click", async event =>
       "display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;padding:10px;background:#e8eef5;color:#17365d;font-size:9pt;";
 
     results.style.cssText =
-      "display:block!important;width:100%;margin:0;padding:5mm;border:0;border-radius:0;box-shadow:none;background:#ffffff;";
+      "display:block;width:100%;margin:0;padding:5mm;border:0;border-radius:0;box-shadow:none;background:#ffffff;";
 
     results.querySelectorAll(".summary-grid").forEach(el => {
       el.style.cssText =
@@ -313,8 +305,6 @@ document.getElementById("print-button").addEventListener("click", async event =>
     report.appendChild(header);
     report.appendChild(contacts);
     report.appendChild(results);
-
-    /* Il contenuto deve essere nel documento per essere acquisito */
     document.body.appendChild(report);
 
     const reportLogo = report.querySelector("img");
@@ -325,9 +315,11 @@ document.getElementById("print-button").addEventListener("click", async event =>
       });
     }
 
-    await new Promise(resolve => requestAnimationFrame(() =>
-      requestAnimationFrame(resolve)
-    ));
+    await new Promise(resolve =>
+      requestAnimationFrame(() =>
+        requestAnimationFrame(resolve)
+      )
+    );
 
     const options = {
       margin: [7, 7, 7, 7],
@@ -337,7 +329,7 @@ document.getElementById("print-button").addEventListener("click", async event =>
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
-        logging: false,
+        logging: true,
         scrollX: 0,
         scrollY: 0
       },
@@ -354,6 +346,10 @@ document.getElementById("print-button").addEventListener("click", async event =>
       .toPdf()
       .get("pdf");
 
+    if (pdf.internal.pages.length <= 1) {
+      throw new Error("Il PDF non contiene pagine valide.");
+    }
+
     const blob = pdf.output("blob");
 
     if (!blob || blob.size < 1000) {
@@ -365,7 +361,6 @@ document.getElementById("print-button").addEventListener("click", async event =>
     if (pdfWindow && !pdfWindow.closed) {
       pdfWindow.location.href = objectUrl;
     } else {
-      /* Se il browser blocca la finestra, apre il PDF nella scheda corrente */
       window.location.href = objectUrl;
     }
   } catch (error) {
@@ -375,8 +370,8 @@ document.getElementById("print-button").addEventListener("click", async event =>
 
     console.error("Errore PDF:", error);
     alert(
-      "Non è stato possibile creare il PDF. Riprova. " +
-      (error && error.message ? error.message : "")
+      "Non è stato possibile creare il PDF. " +
+      (error && error.message ? error.message : "Riprova.")
     );
   } finally {
     if (report && report.parentNode) {
@@ -393,6 +388,6 @@ if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("./service-worker.js")
-      .catch(() => {});
+      .catch(error => console.error("Errore service worker:", error));
   });
 }
