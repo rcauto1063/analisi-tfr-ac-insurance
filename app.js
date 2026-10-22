@@ -248,9 +248,45 @@ function testoPDF(testo) {
     .replace(/__SIMBOLO_EURO__/g, "\\200");
 }
 
-/* GENERATORE PDF GRAFICO: NON DIPENDE DA LIBRERIE ESTERNE */
+/* CARICA IL LOGO E LO CONVERTE IN JPEG INCORPORABILE NEL PDF */
 
-function generaPDF() {
+async function caricaLogoPDF() {
+  const risposta = await fetch("./logo-ac-insurance.png", { cache: "no-store" });
+  if (!risposta.ok) throw new Error("Non riesco a caricare il logo AC Insurance.");
+
+  const immagine = await createImageBitmap(await risposta.blob());
+  const lato = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = lato;
+  canvas.height = lato;
+
+  const contesto = canvas.getContext("2d");
+  contesto.fillStyle = "#ffffff";
+  contesto.fillRect(0, 0, lato, lato);
+
+  const scala = Math.min(lato / immagine.width, lato / immagine.height);
+  const larghezza = immagine.width * scala;
+  const altezza = immagine.height * scala;
+  contesto.drawImage(
+    immagine,
+    (lato - larghezza) / 2,
+    (lato - altezza) / 2,
+    larghezza,
+    altezza
+  );
+
+  const base64 = canvas.toDataURL("image/jpeg", 0.92).split(",")[1];
+  const binario = atob(base64);
+  const bytes = new Uint8Array(binario.length);
+  for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+
+  return { bytes, width: lato, height: lato };
+}
+
+/* GENERATORE PDF GRAFICO: STESSA IMPAGINAZIONE SU PC, IPHONE E IPAD */
+
+async function generaPDF() {
+  const logo = await caricaLogoPDF();
   const azienda = valorePDF("result-company");
   const dipendenti = valorePDF("out-dipendenti");
   const tfr = valorePDF("out-tfr");
@@ -295,6 +331,8 @@ function generaPDF() {
 
   rettangolo(0, 730, 595, 112, navy);
   rettangolo(0, 730, 7, 112, arancio);
+  rettangolo(484, 746, 70, 70, bianco);
+  stream += "q 60 0 0 60 489 751 cm /Im1 Do Q\n";
 
   testoPDFPos("AC INSURANCE", 42, 809, 11, true, bianco);
   testoPDFPos("ANALISI PERSONALIZZATA TFR", 42, 779, 20, true, bianco);
@@ -368,45 +406,55 @@ function generaPDF() {
   testoPDFPos("Telefono: 081 19344322  |  WhatsApp: 081 5520622", 42, 97, 8, false, grigio);
   testoPDFPos("powered by Marco Rossi", 42, 72, 8, true, blu);
 
-  /* STRUTTURA PDF */
+  /* STRUTTURA PDF CON LOGO INCORPORATO */
 
+  const contenuto = stream;
+  const logoBinario = Array.from(logo.bytes, byte => String.fromCharCode(byte)).join("");
   const oggetti = [];
 
   oggetti[1] = "<< /Type /Catalog /Pages 2 0 R >>";
   oggetti[2] = "<< /Type /Pages /Kids [5 0 R] /Count 1 >>";
   oggetti[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
   oggetti[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
-
   oggetti[5] =
     "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] " +
-    "/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>";
-
+    "/Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << /Im1 7 0 R >> >> " +
+    "/Contents 6 0 R >>";
   oggetti[6] =
-    "<< /Length " + stream.length + " >>\nstream\n" +
-    stream + "endstream";
+    "<< /Length " + contenuto.length + " >>\nstream\n" +
+    contenuto + "endstream";
+  oggetti[7] =
+    "<< /Type /XObject /Subtype /Image /Width " + logo.width +
+    " /Height " + logo.height +
+    " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " +
+    logo.bytes.length + " >>\nstream\n" + logoBinario + "\nendstream";
 
   let pdf = "%PDF-1.4\n";
   const offset = [0];
 
-  for (let i = 1; i <= 6; i++) {
+  for (let i = 1; i <= 7; i++) {
     offset[i] = pdf.length;
     pdf += i + " 0 obj\n" + oggetti[i] + "\nendobj\n";
   }
 
   const inizioXref = pdf.length;
-
-  pdf += "xref\n0 7\n";
+  pdf += "xref\n0 8\n";
   pdf += "0000000000 65535 f \n";
 
-  for (let i = 1; i <= 6; i++) {
+  for (let i = 1; i <= 7; i++) {
     pdf += String(offset[i]).padStart(10, "0") + " 00000 n \n";
   }
 
   pdf +=
-    "trailer\n<< /Size 7 /Root 1 0 R >>\nstartxref\n" +
+    "trailer\n<< /Size 8 /Root 1 0 R >>\nstartxref\n" +
     inizioXref + "\n%%EOF";
 
-  return new Blob([pdf], { type: "application/pdf" });
+  const bytesPDF = new Uint8Array(pdf.length);
+  for (let i = 0; i < pdf.length; i++) {
+    bytesPDF[i] = pdf.charCodeAt(i) & 255;
+  }
+
+  return new Blob([bytesPDF], { type: "application/pdf" });
 }
 
 /* CREA E CONDIVIDE IL PDF */
@@ -424,7 +472,7 @@ document.getElementById("print-button").addEventListener("click", async () => {
   pulsante.textContent = "Preparazione PDF...";
 
   try {
-    const blob = generaPDF();
+    const blob = await generaPDF();
 
     if (!blob || blob.size < 1000) {
       throw new Error("Il PDF generato non contiene dati sufficienti.");
