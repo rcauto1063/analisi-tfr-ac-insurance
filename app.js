@@ -1,4 +1,3 @@
-
 const form = document.getElementById("analysis-form");
 const tipoValore = document.getElementById("tipoValore");
 const valoreLabel = document.getElementById("valore-label");
@@ -216,7 +215,7 @@ document.getElementById("new-analysis").addEventListener("click", () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
-/* PDF ESTETICO PER IPHONE E PC, CON PDF TESTUALE DI RISERVA */
+/* DATI PER IL PDF */
 
 function valorePDF(id) {
   const elemento = document.getElementById(id);
@@ -227,114 +226,16 @@ function nomeFilePDF() {
   const azienda = valorePDF("result-company")
     .replace(/[^a-zA-Z0-9_-]+/g, "_")
     .replace(/^_+|_+$/g, "");
+
   return "Analisi_TFR_" + (azienda || "Azienda") + ".pdf";
 }
 
-function creaReportEstetico() {
-  const azienda = valorePDF("result-company");
-  const dipendenti = valorePDF("out-dipendenti");
-
-  const righe = [
-    ["TFR annuo", valorePDF("out-tfr")],
-    ["Costi aziendali evitabili", valorePDF("out-cost-positive")],
-    ["Deduzione fiscale", valorePDF("out-deduzione")]
-  ];
-
-  const dettaglio = [
-    ["RAL media annua", valorePDF("out-ral")],
-    ["Monte stipendi", valorePDF("out-monte")],
-    ["Rivalutazione TFR", valorePDF("out-rivalutazione-pct")],
-    ["Costo rivalutazione TFR", valorePDF("out-rivalutazione")],
-    ["Imposta sulla rivalutazione", valorePDF("out-imposta")],
-    ["Fondo garanzia INPS", valorePDF("out-fondo")],
-    ["Oneri impropri", valorePDF("out-oneri")],
-    ["Totale costi evitabili", valorePDF("out-costo-totale")],
-    ["Deduzione fiscale", valorePDF("out-deduzione-dettaglio")]
-  ];
-
-  const righeHTML = elenco => elenco.map(([etichetta, valore]) =>
-    `<div style="display:flex;justify-content:space-between;gap:18px;padding:9px 0;border-bottom:1px solid #e1e8ef;">
-      <span style="color:#526174;">${etichetta}</span>
-      <strong style="color:#17365d;text-align:right;">${valore || "—"}</strong>
-    </div>`
-  ).join("");
-
-  const report = document.createElement("div");
-  report.setAttribute("id", "pdf-report-temporaneo");
-
-  report.style.cssText = [
-    "position:fixed",
-    "left:-10000px",
-    "top:0",
-    "width:760px",
-    "padding:34px",
-    "box-sizing:border-box",
-    "background:#ffffff",
-    "color:#1e293b",
-    "font-family:Arial,Helvetica,sans-serif",
-    "font-size:15px",
-    "line-height:1.45",
-    "z-index:-1"
-  ].join(";");
-
-  report.innerHTML = `
-    <div style="border-radius:14px 14px 0 0;background:#17365d;color:#fff;padding:26px 30px;">
-      <div style="font-size:13px;letter-spacing:2px;font-weight:700;color:#dbeafe;">AC INSURANCE</div>
-      <div style="font-size:27px;font-weight:700;margin-top:10px;">Analisi personalizzata TFR</div>
-      <div style="font-size:14px;margin-top:5px;color:#e5edf7;">Analisi dei costi aziendali e dei benefici fiscali</div>
-    </div>
-    <div style="border:1px solid #dbe3ec;border-top:0;padding:24px 30px 28px;border-radius:0 0 14px 14px;">
-      <div style="font-size:12px;letter-spacing:1.2px;color:#64748b;font-weight:700;margin-bottom:8px;">DATI AZIENDALI</div>
-      <div style="font-size:22px;font-weight:700;color:#17365d;margin-bottom:5px;">${azienda}</div>
-      <div style="color:#526174;margin-bottom:22px;">Numero dipendenti: <strong>${dipendenti}</strong></div>
-
-      <div style="font-size:12px;letter-spacing:1.2px;color:#64748b;font-weight:700;margin-bottom:10px;">RIEPILOGO ECONOMICO</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-        ${righe.map(([etichetta, valore]) => `
-          <div style="border:1px solid #dbe3ec;border-radius:10px;padding:15px;background:#f7f9fc;">
-            <div style="font-size:12px;color:#64748b;margin-bottom:7px;">${etichetta}</div>
-            <div style="font-size:20px;font-weight:700;color:#17365d;">${valore || "—"}</div>
-          </div>`).join("")}
-        <div style="border-radius:10px;padding:15px;background:#eaf5ef;border:1px solid #c8e5d3;">
-          <div style="font-size:12px;color:#35634a;margin-bottom:7px;">Delta complessivo</div>
-          <div style="font-size:23px;font-weight:700;color:#17633a;">${valorePDF("out-delta")}</div>
-          <div style="font-size:13px;color:#35634a;margin-top:4px;">${valorePDF("out-percentuale-dettaglio")} del TFR annuo</div>
-        </div>
-      </div>
-
-      <div style="font-size:12px;letter-spacing:1.2px;color:#64748b;font-weight:700;margin:24px 0 8px;">DETTAGLIO COSTI E PARAMETRI</div>
-      ${righeHTML(dettaglio)}
-
-      <div style="margin-top:24px;padding:15px 17px;background:#f7f9fc;border-left:4px solid #ed7d31;border-radius:4px;">
-        <div style="font-weight:700;color:#17365d;margin-bottom:5px;">Riferimento normativo</div>
-        <div>D.Lgs. 252/2005, art. 10.</div>
-      </div>
-
-      <div style="margin-top:18px;font-size:12px;color:#64748b;">
-        <strong>Nota informativa</strong><br>
-        Analisi puramente indicativa, elaborata sulla base dei dati forniti dall'azienda.
-        Gli importi possono variare in funzione dei dati effettivi e delle condizioni applicabili.
-      </div>
-
-      <div style="margin-top:24px;padding-top:16px;border-top:1px solid #dbe3ec;display:flex;justify-content:space-between;gap:20px;">
-        <div>
-          <div style="font-weight:700;color:#17365d;">AC INSURANCE</div>
-          <div style="font-size:12px;color:#526174;">Via T. De Amicis 50, 80145 Napoli</div>
-          <div style="font-size:12px;color:#526174;">Telefono: 081 19344322 · WhatsApp: 081 5520622</div>
-        </div>
-        <div style="align-self:flex-end;font-size:12px;color:#64748b;font-style:italic;">powered by Marco Rossi</div>
-      </div>
-    </div>`;
-
-  document.body.appendChild(report);
-  return report;
-}
-
-/* PDF TESTUALE DI RISERVA */
+/* CODIFICA TESTO PDF: EURO COME SIMBOLO, NON COME ?EUR */
 
 function testoPDF(testo) {
   return String(testo)
-    .replace(/€/g, "EUR")
+    .replace(/€/g, "__SIMBOLO_EURO__")
+    .replace(/\u00A0/g, " ")
     .replace(/[–—]/g, "-")
     .replace(/[“”]/g, '"')
     .replace(/[‘’]/g, "'")
@@ -343,172 +244,169 @@ function testoPDF(testo) {
     .replace(/[^\x20-\x7E]/g, "?")
     .replace(/\\/g, "\\\\")
     .replace(/\(/g, "\\(")
-    .replace(/\)/g, "\\)");
+    .replace(/\)/g, "\\)")
+    .replace(/__SIMBOLO_EURO__/g, "\\200");
 }
 
-function generaPDFTestuale() {
-  const righe = [
-    ["AC INSURANCE", 18, true],
-    ["ANALISI PERSONALIZZATA TFR AZIENDA", 13, true],
-    ["", 10, false],
-    ["Azienda: " + valorePDF("result-company"), 10, false],
-    ["Numero dipendenti: " + valorePDF("out-dipendenti"), 10, false],
-    ["TFR annuo: " + valorePDF("out-tfr"), 10, false],
-    ["Costi aziendali evitabili: " + valorePDF("out-cost-positive"), 10, false],
-    ["Deduzione fiscale: " + valorePDF("out-deduzione"), 10, false],
-    ["Delta complessivo: " + valorePDF("out-delta"), 13, true],
-    ["Incidenza sul TFR annuo: " + valorePDF("out-percentuale-dettaglio"), 10, false],
-    ["", 10, false],
-    ["DETTAGLIO COSTI", 12, true],
-    ["RAL media annua: " + valorePDF("out-ral"), 10, false],
-    ["Monte stipendi: " + valorePDF("out-monte"), 10, false],
-    ["Rivalutazione TFR: " + valorePDF("out-rivalutazione-pct"), 10, false],
-    ["Costo rivalutazione TFR: " + valorePDF("out-rivalutazione"), 10, false],
-    ["Imposta sulla rivalutazione: " + valorePDF("out-imposta"), 10, false],
-    ["Fondo garanzia INPS: " + valorePDF("out-fondo"), 10, false],
-    ["Oneri impropri: " + valorePDF("out-oneri"), 10, false],
-    ["Totale costi evitabili: " + valorePDF("out-costo-totale"), 10, true],
-    ["", 10, false],
-    ["RIFERIMENTO NORMATIVO", 12, true],
-    ["D.Lgs. 252/2005, art. 10.", 10, false],
-    ["", 10, false],
-    ["NOTA INFORMATIVA", 11, true],
-    ["Analisi indicativa elaborata sulla base dei dati forniti dall'azienda.", 9, false],
-    ["Gli importi possono variare in funzione dei dati effettivi e delle condizioni applicabili.", 9, false],
-    ["", 10, false],
-    ["AC INSURANCE - Via T. De Amicis 50, 80145 Napoli", 9, true],
-    ["Telefono: 081 19344322 - WhatsApp: 081 5520622", 9, false],
-    ["powered by Marco Rossi", 9, false]
-  ];
+/* GENERATORE PDF GRAFICO: NON DIPENDE DA LIBRERIE ESTERNE */
 
-  const pagine = [];
-  let pagina = [];
-  let y = 790;
+function generaPDF() {
+  const azienda = valorePDF("result-company");
+  const dipendenti = valorePDF("out-dipendenti");
+  const tfr = valorePDF("out-tfr");
+  const costi = valorePDF("out-cost-positive");
+  const deduzione = valorePDF("out-deduzione");
+  const delta = valorePDF("out-delta");
+  const percentuale = valorePDF("out-percentuale-dettaglio");
 
-  righe.forEach(([testo, size, bold]) => {
-    const altezza = testo === "" ? 9 : (size >= 13 ? 24 : 17);
+  const navy = "0.09 0.21 0.36";
+  const blu = "0.14 0.35 0.55";
+  const verde = "0.08 0.43 0.25";
+  const verdeChiaro = "0.91 0.96 0.93";
+  const grigio = "0.39 0.45 0.52";
+  const grigioChiaro = "0.96 0.97 0.98";
+  const linea = "0.85 0.88 0.91";
+  const bianco = "1 1 1";
+  const arancio = "0.93 0.49 0.19";
 
-    if (y < 65) {
-      pagine.push(pagina);
-      pagina = [];
-      y = 790;
-    }
+  let stream = "";
 
-    pagina.push({ testo, size, bold, y });
-    y -= altezza;
-  });
+  function rettangolo(x, y, w, h, colore) {
+    stream += `${colore} rg ${x} ${y} ${w} ${h} re f\n`;
+  }
 
-  if (pagina.length) pagine.push(pagina);
+  function lineaPDF(x1, y1, x2, y2, colore, spessore = 0.7) {
+    stream += `${colore} RG ${spessore} w ${x1} ${y1} m ${x2} ${y2} l S\n`;
+  }
+
+  function testoPDFPos(testo, x, y, size = 10, bold = false, colore = navy) {
+    stream +=
+      `BT /${bold ? "F2" : "F1"} ${size} Tf ${colore} rg ` +
+      `1 0 0 1 ${x} ${y} Tm (${testoPDF(testo)}) Tj ET\n`;
+  }
+
+  function rigaDettaglio(etichetta, valore, y, bold = false) {
+    testoPDFPos(etichetta, 48, y, 9, bold, bold ? navy : grigio);
+    testoPDFPos(valore || "—", 360, y, 9, true, navy);
+    lineaPDF(48, y - 8, 547, y - 8, linea, 0.45);
+  }
+
+  /* INTESTAZIONE */
+
+  rettangolo(0, 730, 595, 112, navy);
+  rettangolo(0, 730, 7, 112, arancio);
+
+  testoPDFPos("AC INSURANCE", 42, 809, 11, true, bianco);
+  testoPDFPos("ANALISI PERSONALIZZATA TFR", 42, 779, 20, true, bianco);
+  testoPDFPos("ANALISI DEI COSTI AZIENDALI E DEI BENEFICI FISCALI", 42, 758, 8, false, "0.87 0.91 0.96");
+
+  /* DATI AZIENDALI */
+
+  testoPDFPos("DATI AZIENDALI", 42, 705, 9, true, grigio);
+  testoPDFPos(azienda, 42, 681, 17, true, navy);
+  testoPDFPos("Numero dipendenti: " + dipendenti, 42, 662, 10, false, grigio);
+
+  lineaPDF(42, 646, 553, 646, linea, 0.8);
+
+  /* RIQUADRI ECONOMICI */
+
+  const cardW = 247;
+  const cardH = 55;
+  const leftX = 42;
+  const rightX = 306;
+
+  rettangolo(leftX, 574, cardW, cardH, grigioChiaro);
+  rettangolo(rightX, 574, cardW, cardH, grigioChiaro);
+  rettangolo(leftX, 509, cardW, cardH, grigioChiaro);
+  rettangolo(rightX, 509, cardW, cardH, verdeChiaro);
+
+  testoPDFPos("TFR ANNUO", leftX + 13, 610, 8, true, grigio);
+  testoPDFPos(tfr, leftX + 13, 588, 15, true, navy);
+
+  testoPDFPos("COSTI AZIENDALI EVITABILI", rightX + 13, 610, 8, true, grigio);
+  testoPDFPos(costi, rightX + 13, 588, 15, true, navy);
+
+  testoPDFPos("DEDUZIONE FISCALE", leftX + 13, 545, 8, true, grigio);
+  testoPDFPos(deduzione, leftX + 13, 523, 15, true, navy);
+
+  testoPDFPos("DELTA COMPLESSIVO", rightX + 13, 545, 8, true, verde);
+  testoPDFPos(delta, rightX + 13, 523, 15, true, verde);
+  testoPDFPos(percentuale + " del TFR annuo", rightX + 13, 496, 9, true, verde);
+
+  /* DETTAGLIO COSTI */
+
+  testoPDFPos("DETTAGLIO COSTI E PARAMETRI", 42, 474, 10, true, navy);
+
+  rigaDettaglio("RAL media annua", valorePDF("out-ral"), 453);
+  rigaDettaglio("Monte stipendi", valorePDF("out-monte"), 432);
+  rigaDettaglio("Rivalutazione TFR", valorePDF("out-rivalutazione-pct"), 411);
+  rigaDettaglio("Costo rivalutazione TFR", valorePDF("out-rivalutazione"), 390);
+  rigaDettaglio("Imposta sulla rivalutazione", valorePDF("out-imposta"), 369);
+  rigaDettaglio("Fondo garanzia INPS", valorePDF("out-fondo"), 348);
+  rigaDettaglio("Oneri impropri", valorePDF("out-oneri"), 327);
+  rigaDettaglio("Totale costi evitabili", valorePDF("out-costo-totale"), 306, true);
+  rigaDettaglio("Deduzione fiscale", valorePDF("out-deduzione-dettaglio"), 285);
+
+  /* RIFERIMENTO NORMATIVO */
+
+  rettangolo(42, 218, 511, 43, grigioChiaro);
+  rettangolo(42, 218, 4, 43, arancio);
+  testoPDFPos("RIFERIMENTO NORMATIVO", 55, 243, 9, true, navy);
+  testoPDFPos("Decreto legislativo n. 252 del 5 dicembre 2005, art. 10.", 55, 228, 9, false, grigio);
+
+  /* NOTA INFORMATIVA */
+
+  testoPDFPos("NOTA INFORMATIVA", 42, 193, 9, true, navy);
+  testoPDFPos("Analisi puramente indicativa, elaborata sulla base dei dati forniti dall'azienda.", 42, 177, 8, false, grigio);
+  testoPDFPos("Gli importi possono variare in funzione dei dati effettivi e delle condizioni applicabili.", 42, 164, 8, false, grigio);
+
+  /* PIE' DI PAGINA */
+
+  lineaPDF(42, 145, 553, 145, linea, 0.8);
+  testoPDFPos("AC INSURANCE", 42, 126, 9, true, navy);
+  testoPDFPos("Via T. De Amicis 50, 80145 Napoli", 42, 111, 8, false, grigio);
+  testoPDFPos("Telefono: 081 19344322  |  WhatsApp: 081 5520622", 42, 97, 8, false, grigio);
+  testoPDFPos("powered by Marco Rossi", 42, 72, 8, true, blu);
+
+  /* STRUTTURA PDF */
 
   const oggetti = [];
+
   oggetti[1] = "<< /Type /Catalog /Pages 2 0 R >>";
+  oggetti[2] = "<< /Type /Pages /Kids [5 0 R] /Count 1 >>";
   oggetti[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
   oggetti[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
 
-  const riferimenti = [];
+  oggetti[5] =
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] " +
+    "/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>";
 
-  pagine.forEach((contenuto, indice) => {
-    const idPagina = 5 + indice * 2;
-    const idStream = idPagina + 1;
-    riferimenti.push(idPagina + " 0 R");
-
-    let stream = "";
-
-    contenuto.forEach(riga => {
-      stream += "BT /" + (riga.bold ? "F2" : "F1") + " " + riga.size +
-        " Tf 48 " + riga.y + " Td (" + testoPDF(riga.testo) + ") Tj ET\n";
-    });
-
-    oggetti[idPagina] =
-      "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] " +
-      "/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents " +
-      idStream + " 0 R >>";
-
-    oggetti[idStream] =
-      "<< /Length " + stream.length + " >>\nstream\n" +
-      stream + "endstream";
-  });
-
-  oggetti[2] =
-    "<< /Type /Pages /Kids [" + riferimenti.join(" ") +
-    "] /Count " + pagine.length + " >>";
+  oggetti[6] =
+    "<< /Length " + stream.length + " >>\nstream\n" +
+    stream + "endstream";
 
   let pdf = "%PDF-1.4\n";
   const offset = [0];
-  const numeroOggetti = oggetti.length;
 
-  for (let i = 1; i < numeroOggetti; i++) {
-    if (!oggetti[i]) continue;
+  for (let i = 1; i <= 6; i++) {
     offset[i] = pdf.length;
     pdf += i + " 0 obj\n" + oggetti[i] + "\nendobj\n";
   }
 
   const inizioXref = pdf.length;
 
-  pdf += "xref\n0 " + numeroOggetti + "\n";
+  pdf += "xref\n0 7\n";
   pdf += "0000000000 65535 f \n";
 
-  for (let i = 1; i < numeroOggetti; i++) {
-    pdf += !oggetti[i]
-      ? "0000000000 00000 f \n"
-      : String(offset[i]).padStart(10, "0") + " 00000 n \n";
+  for (let i = 1; i <= 6; i++) {
+    pdf += String(offset[i]).padStart(10, "0") + " 00000 n \n";
   }
 
   pdf +=
-    "trailer\n<< /Size " + numeroOggetti +
-    " /Root 1 0 R >>\nstartxref\n" +
+    "trailer\n<< /Size 7 /Root 1 0 R >>\nstartxref\n" +
     inizioXref + "\n%%EOF";
 
   return new Blob([pdf], { type: "application/pdf" });
-}
-
-/* GENERA PRIMA IL PDF ESTETICO */
-
-async function creaPDFBlob() {
-  if (typeof window.html2pdf === "function") {
-    const report = creaReportEstetico();
-
-    try {
-      const worker = window.html2pdf()
-        .set({
-          margin: [8, 8, 8, 8],
-          filename: nomeFilePDF(),
-          image: { type: "jpeg", quality: 0.96 },
-          html2canvas: {
-            scale: 1.5,
-            useCORS: true,
-            backgroundColor: "#ffffff",
-            width: 760,
-            windowWidth: 794,
-            scrollX: 0,
-            scrollY: 0
-          },
-          jsPDF: {
-            unit: "mm",
-            format: "a4",
-            orientation: "portrait"
-          },
-          pagebreak: { mode: ["css", "legacy"] }
-        })
-        .from(report)
-        .toPdf();
-
-      const blob = await worker.outputPdf("blob");
-
-      if (blob && blob.size > 5000) {
-        return blob;
-      }
-    } catch (errore) {
-      console.warn(
-        "PDF estetico non disponibile, uso il riepilogo:",
-        errore
-      );
-    } finally {
-      report.remove();
-    }
-  }
-
-  return generaPDFTestuale();
 }
 
 /* CREA E CONDIVIDE IL PDF */
@@ -526,7 +424,7 @@ document.getElementById("print-button").addEventListener("click", async () => {
   pulsante.textContent = "Preparazione PDF...";
 
   try {
-    const blob = await creaPDFBlob();
+    const blob = generaPDF();
 
     if (!blob || blob.size < 1000) {
       throw new Error("Il PDF generato non contiene dati sufficienti.");
