@@ -1,4 +1,5 @@
-const CACHE_NAME = "analisi-tfr-v3";
+
+const CACHE_NAME = "analisi-tfr-v4";
 
 const FILES_TO_CACHE = [
   "./",
@@ -7,7 +8,8 @@ const FILES_TO_CACHE = [
   "./app.js",
   "./html2pdf.bundle.min.js",
   "./logo-ac-insurance.png",
-  "./apple-touch-icon.png"
+  "./apple-touch-icon.png",
+  "./manifest.webmanifest"
 ];
 
 self.addEventListener("install", event => {
@@ -40,13 +42,15 @@ self.addEventListener("fetch", event => {
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(
-    fetch(event.request)
+    fetch(new Request(event.request, { cache: "no-store" }))
       .then(response => {
         if (response && response.ok) {
           const copia = response.clone();
+
           caches.open(CACHE_NAME)
             .then(cache => cache.put(event.request, copia));
         }
+
         return response;
       })
       .catch(() =>
