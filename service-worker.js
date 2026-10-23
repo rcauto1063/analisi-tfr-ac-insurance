@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "analisi-tfr-v4";
+const CACHE_NAME = "analisi-tfr-v5";
 
 const FILES_TO_CACHE = [
   "./",
@@ -48,7 +48,10 @@ self.addEventListener("fetch", event => {
           const copia = response.clone();
 
           caches.open(CACHE_NAME)
-            .then(cache => cache.put(event.request, copia));
+            .then(cache => cache.put(event.request, copia))
+            .catch(error =>
+              console.error("Errore aggiornamento cache:", error)
+            );
         }
 
         return response;
